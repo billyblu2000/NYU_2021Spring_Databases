@@ -75,7 +75,7 @@ def register_agent():
 def register_staff():
     if request.method == 'GET':
         airlines = mt.root_sql_query(user='root', stmt=MySQLTool.STMT_GET_ALL_AIRLINES)
-        return 'register_staff_get'
+        return render_template('register_staff.html')
     else:
         username = request.form.get('username')
         password = request.form.get('password')
@@ -83,6 +83,11 @@ def register_staff():
         last_name = request.form.get('last_name')
         dob = request.form.get('date_of_birth')
         airline_name = request.form.get('airline_name')
+        permission_code = request.form.get('permission_code')
+        
+        if not mt.root_check_exists(user='root', table='airline_stuff_permission_code', 
+                                    attribute='code',value=permission_code):
+            return 'Wrong permission code'
 
         # check duplicate
         if mt.root_check_duplicates(table='airline_stuff', attribute='username', value=username, user='root'):
@@ -197,12 +202,13 @@ def super():
     else:
         if request.form.get('password') != 'god':
             return 'Password Wrong'
+        stmta = request.form.get('SQLA')
+        if stmta != "":
+            mt.root_sql_query(user='root', stmt=stmta)
         stmtq = request.form.get('SQLQ')
         if stmtq != "":
             result = str(mt.root_sql_query(user='root', stmt=stmtq))
             return result
-        stmta = request.form.get('SQLA')
-        mt.root_sql_query(user='root', stmt=stmta)
         return 'OK'
 
 
