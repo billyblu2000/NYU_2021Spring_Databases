@@ -57,11 +57,13 @@ class MySQLTool:
     # ###############
 
     def __init__(self):
+
         self._conn = mysql.connector.connect(
             host=DB_HOST,
             user=DB_USER,
             password=DB_PASS,
-            db=DB_NAME
+            db=DB_NAME,
+
         )
 
     def get_connection(self):
@@ -168,7 +170,7 @@ class MySQLTool:
         cursor = self._conn.cursor()
         cursor.execute('SELECT MAX(booking_agent_id) FROM booking_agent')
         result = cursor.fetchone()[0]
-        return result + 1
+        return result + 1 if result is not None else 1
 
     # ############
     # util methods
