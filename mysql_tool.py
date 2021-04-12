@@ -148,6 +148,13 @@ class MySQLTool:
         return cursor.fetchall()
 
     @validate_user(role='root')
+    def root_sql_alter(self, user, stmt):
+        cursor = self._conn.cursor()
+        cursor.execute(stmt)
+        self._conn.commit()
+        return True
+
+    @validate_user(role='root')
     def root_check_duplicates(self, user, table, attribute, value):
         cursor = self._conn.cursor(prepared=True)
         stmt = 'SELECT * FROM {t} WHERE {a} = %s'.format(t=table, a=attribute)

