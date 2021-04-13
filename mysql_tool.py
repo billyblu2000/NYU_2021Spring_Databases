@@ -178,6 +178,16 @@ class MySQLTool:
         result = cursor.fetchone()[0]
         return result + 1 if result is not None else 1
 
+    @validate_user(role='root')
+    def root_new_user_gen_id(self,user):
+        cursor = self._conn.cursor()
+        cursor.execute('SELECT MAX(uid) FROM `user`')
+        new_id = cursor.fetchone()[0] + 1
+        cursor = self._conn.cursor()
+        cursor.execute('INSERT INTO `user` VALUE ({r})'.format(r=str(new_id)))
+        self._conn.commit()
+        return new_id
+
     # ############
     # util methods
     # ############

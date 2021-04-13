@@ -36,9 +36,10 @@ def register_customer():
 
         else:
             md5_pass = md5(password.encode('utf-8')).hexdigest()
+            new_id = mt.root_new_user_gen_id(user='root')
             mt.root_insert(user='root', table='customer', value=[email, name, md5_pass, building_number,
                                                                  street, city, state, phone_number, passport_number,
-                                                                 passport_expiration, passport_country, dob])
+                                                                 passport_expiration, passport_country, dob, new_id])
             # inform user
             # TODO
             session['user'] = email + ":C"
@@ -63,7 +64,8 @@ def register_agent():
         else:
             md5_pass = md5(password.encode('utf-8')).hexdigest()
             agent_id = mt.root_get_new_agent_id(user='root')
-            mt.root_insert(user='root', table='booking_agent', value=[email, md5_pass, agent_id])
+            new_id = mt.root_new_user_gen_id(user='root')
+            mt.root_insert(user='root', table='booking_agent', value=[email, md5_pass, agent_id, new_id])
 
             # inform user
             # TODO
@@ -84,9 +86,9 @@ def register_staff():
         dob = request.form.get('date_of_birth')
         airline_name = request.form.get('airline_name')
         permission_code = request.form.get('permission_code')
-        
-        if not mt.root_check_exists(user='root', table='airline_stuff_permission_code', 
-                                    attribute='code',value=permission_code):
+
+        if not mt.root_check_exists(user='root', table='airline_stuff_permission_code',
+                                    attribute='code', value=permission_code):
             return 'Wrong permission code'
 
         # check duplicate
@@ -96,8 +98,9 @@ def register_staff():
             return 'duplicate user'
         else:
             md5_pass = md5(password.encode('utf-8')).hexdigest()
+            new_id = mt.root_new_user_gen_id(user='root')
             mt.root_insert(user='root', table='airline_stuff', value=[username, md5_pass, first_name, last_name, dob,
-                                                                      airline_name])
+                                                                      airline_name, new_id])
             # TODO
             session['user'] = username + ":A"
             return redirect('/home/', code=302, Response=None)
@@ -180,6 +183,11 @@ def home():
         return 'Guest'
 
 
+@app.route('/profile/<uid>', methods=['POST', 'GET'])
+def profile(uid):
+    pass
+
+
 @app.errorhandler(404)
 def error404(error):
     return 'Are you sure about this url?'
@@ -207,7 +215,6 @@ def super():
         if stmta != "":
             mt.root_sql_query(user='root', stmt=stmta)
         stmtq = request.form.get('SQLQ')
-        print(stmtq)
         if stmtq != "":
             result = str(mt.root_sql_query(user='root', stmt=stmtq))
             return result
