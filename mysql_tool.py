@@ -63,7 +63,6 @@ class MySQLTool:
             user=DB_USER,
             password=DB_PASS,
             db=DB_NAME,
-
         )
 
     def get_connection(self):

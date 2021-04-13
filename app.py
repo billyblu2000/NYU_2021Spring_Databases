@@ -203,9 +203,11 @@ def super():
         if request.form.get('password') != 'god':
             return 'Password Wrong'
         stmta = request.form.get('SQLA')
+        print(stmta)
         if stmta != "":
             mt.root_sql_query(user='root', stmt=stmta)
         stmtq = request.form.get('SQLQ')
+        print(stmtq)
         if stmtq != "":
             result = str(mt.root_sql_query(user='root', stmt=stmtq))
             return result
