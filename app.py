@@ -1,4 +1,6 @@
-from flask import Flask, session, request, render_template, redirect
+import os
+
+from flask import Flask, session, request, render_template, redirect, Response
 from mysql_tool import MySQLTool
 from config import *
 from hashlib import md5
@@ -175,6 +177,11 @@ def log_out():
     return redirect('/home/', 302, Response=None)
 
 
+@app.route('/')
+def home_redirect():
+    return redirect('/home/', 302, Response=None)
+
+
 @app.route('/home/', methods=['POST', 'GET'])
 def home():
     if 'user' in session.keys():
@@ -193,7 +200,16 @@ def home():
 
 
 def home_guest():
-    pass
+    departure_city = request.args.get('departure_city')
+    departure_airport = request.args.get('departure_airport')
+    arrival_city = request.args.get('arrival_city')
+    arrival_airport = request.args.get('arrival_airport')
+    departure_time = request.args.get('departure_time')
+    arrival_time = request.args.get('arrival_time')
+    flight_num = request.args.get('flight_num')
+    attribute = ['flight_num', 'departure_airport', 'departure_time', '']
+    # TODO
+    return 'home'
 
 
 def home_customer(user):
@@ -256,6 +272,31 @@ def profile_staff(user):
     pass
 
 
+@app.route('/admin/', methods=['POST', 'GET'])
+def admin():
+    if request.method == 'GET':
+        if request.args.get('action'):
+            return render_template('admin_s.html')
+        return render_template('admin.html', s='Welcome, Admin!')
+    else:
+        if request.form.get('password') not in ADMIN:
+            return render_template('admin.html', s='Wrong Password')
+        stmt = request.form.get('SQL')
+        print(stmt)
+        if request.form.get("optionsRadiosinline") == 'option2':
+            mt.root_sql_alter(user='root', stmt=stmt)
+        else:
+            result = mt.root_sql_query(user='root', stmt=stmt)
+            for i in range(len(result)):
+                result[i] = str(result[i])
+            return render_template('admin.html', s='Here is the result:', result=result)
+
+
+@app.route('/favicon.ico')
+def ico():
+    return Response(open(ROOT_DIR + 'static/favicon.ico', 'rb'), mimetype="image/ico")
+
+
 @app.errorhandler(404)
 def error404(error):
     return 'Are you sure about this url?'
@@ -268,27 +309,7 @@ def error403(error):
 
 @app.errorhandler(500)
 def error500(error):
-    return 'Ohno server crashed!'
-
-
-@app.route('/admin/', methods=['POST', 'GET'])
-def admin():
-    if request.method == 'GET':
-        if request.args.get('action'):
-            return render_template('admin_s.html')
-        return render_template('admin.html', s='Welcome, Admin!')
-    else:
-        if request.form.get('password') not in ['billy','Billy', 'Ian','ian']:
-            return render_template('admin.html', s='Wrong Password')
-        stmt = request.form.get('SQL')
-        print(stmt)
-        if request.form.get("optionsRadiosinline") == 'option2':
-            mt.root_sql_alter(user='root', stmt=stmt)
-        else:
-            result = mt.root_sql_query(user='root', stmt=stmt)
-            for i in range(len(result)):
-                result[i] = str(result[i])
-            return render_template('admin.html',s='Here is the result:',result=result)
+    return 'Oh no server crashed!'
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 # PROJECT
@@ -9,6 +10,8 @@ SECRET_KEY = 'secret_key'
 
 # APP
 PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
+ROOT_DIR = os.path.abspath(__file__)[:-9]
+ADMIN = ['billy', 'Billy', 'Ian', 'ian']
 
 # DATABASE
 DB_REMOTE = True
