@@ -278,14 +278,16 @@ def admin():
             return render_template('admin_s.html')
         return render_template('admin.html', s='Welcome, Admin!')
     else:
-        if request.form.get('password') != 'god':
+        if request.form.get('password') not in ['billy','Billy', 'Ian','ian']:
             return render_template('admin.html', s='Wrong Password')
         stmt = request.form.get('SQL')
         print(stmt)
         if request.form.get("optionsRadiosinline") == 'option2':
             mt.root_sql_alter(user='root', stmt=stmt)
         else:
-            result = str(mt.root_sql_query(user='root', stmt=stmt))
+            result = mt.root_sql_query(user='root', stmt=stmt)
+            for i in range(len(result)):
+                result[i] = str(result[i])
             return render_template('admin.html',s='Here is the result:',result=result)
 
 

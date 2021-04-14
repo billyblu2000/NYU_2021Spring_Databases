@@ -21,7 +21,9 @@
     </nav>
     <br/><br/><br/>
     <h1 style="text-align: center">{{ s }}</h1>
-   <p style="text-align: center">{{ result }}</p>
+    {% for i in result %}
+   <p style="text-align: center">{{ i }}</p>
+    {% endfor %}
     <script src="https://code.jquery.com/jquery.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
    </body>
