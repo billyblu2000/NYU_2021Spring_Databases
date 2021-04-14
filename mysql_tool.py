@@ -49,8 +49,11 @@ def validate_user(role="ABC"):
 class MySQLTool:
     """A class deals all the things related to MYSQL"""
 
-    # stored SQL queries
+    # stored SQL queries and constants
     STMT_GET_ALL_AIRLINES = 'SELECT airline_name FROM airline'
+    A = 'airline_staff'
+    B = 'booking_agent'
+    C = 'customer'
 
     # ###############
     # general methods
@@ -179,7 +182,7 @@ class MySQLTool:
         return result + 1 if result is not None else 1
 
     @validate_user(role='root')
-    def root_new_user_gen_id(self,user):
+    def root_new_user_gen_id(self, user):
         cursor = self._conn.cursor()
         cursor.execute('SELECT MAX(uid) FROM `user`')
         new_id = cursor.fetchone()[0] + 1
@@ -187,6 +190,19 @@ class MySQLTool:
         cursor.execute('INSERT INTO `user` VALUE ({r})'.format(r=str(new_id)))
         self._conn.commit()
         return new_id
+
+    @validate_user(role='root')
+    def root_get_uid(self, user, role, pk):
+        cursor = self._conn.cursor(prepared=True)
+        stmt = ''
+        if role == "A":
+            stmt = 'SELECT uid FROM airline_staff WHERE username = %s'
+        if role == "B":
+            stmt = 'SELECT uid FROM booking_agent WHERE email = %s'
+        if role == "C":
+            stmt = 'SELECT uid FROM customer WHERE email = %s'
+        cursor.execute(stmt, pk)
+        return cursor.fetchall()
 
     # ############
     # util methods

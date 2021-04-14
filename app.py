@@ -178,13 +178,81 @@ def log_out():
 @app.route('/home/', methods=['POST', 'GET'])
 def home():
     if 'user' in session.keys():
-        return 'Home of ' + session['user']
+        user = session['user']
+        user_role = user[-1]
+        if user_role == 'A':
+            return home_staff(user=user)
+        elif user_role == 'B':
+            return home_agent(user=user)
+        elif user_role == 'C':
+            return home_customer(user=user)
+        else:
+            return redirect('/home/', code=302, Response=None)
     else:
-        return 'Guest'
+        return home_guest()
 
 
-@app.route('/profile/<uid>', methods=['POST', 'GET'])
+def home_guest():
+    pass
+
+
+def home_customer(user):
+    pass
+
+
+def home_agent(user):
+    pass
+
+
+def home_staff(user):
+    pass
+
+
+@app.route('/profile/', methods=['POST', 'GET'])
+def profile_redirect():
+    if 'user' in session.keys():
+        user = session['user']
+        user_name = user[:-2]
+        user_role = user[-1]
+        uid = mt.root_get_uid(user='root', role=user_role, pk=user_name)[0][0]
+        return redirect('/profile/{uid}/'.format(uid=uid))
+
+    else:
+        return redirect('/home/', code=302, Response=None)
+
+
+@app.route('/profile/<uid>/', methods=['POST', 'GET'])
 def profile(uid):
+    if 'user' in session.keys():
+        user_name = session['user'][:-2]
+        user_role = session['user'][-1]
+        if user_role == 'A':
+            if mt.root_check_exists(user='root', table='airline_staff',
+                                    attribute=['username', 'uid'], value=[user_name, uid]):
+                return profile_staff(user=session['user'])
+        elif user_role == 'B':
+            if mt.root_check_exists(user='root', table='booking_agent',
+                                    attribute=['email', 'uid'], value=[user_name, uid]):
+                return profile_agent(user=session['user'])
+        elif user_role == 'C':
+            if mt.root_check_exists(user='root', table='customer',
+                                    attribute=['email', 'uid'], value=[user_name, uid]):
+                return profile_customer(user=session['user'])
+        else:
+            return redirect('/home/', code=302, Response=None)
+    else:
+        return redirect('/home/', code=302, Response=None)
+
+
+def profile_customer(user):
+    pass
+
+
+def profile_agent(user):
+    pass
+
+
+def profile_staff(user):
     pass
 
 
@@ -203,8 +271,8 @@ def error500(error):
     return 'Ohno server crashed!'
 
 
-@app.route('/super/', methods=['POST', 'GET'])
-def super():
+@app.route('/admin/', methods=['POST', 'GET'])
+def admin():
     if request.method == 'GET':
         return render_template('super.html')
     else:
