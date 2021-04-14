@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="">
+   <head>
+      <title>admin</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+       <link rel="shortcut icon" href="/static/favicon.ico" />
+   </head>
+<body style="text-align: center; background-color: #e6eef7">
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/admin/">Flight Ticket Reservation System&emsp;&emsp;</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/admin/?action=sql">SQL</a></li>
+            </ul>
+        </div>
+        </div>
+    </nav>
+    <br/>
+   <div style="margin:0 auto;width: 620px; height: 600px; background-color: #f8fdfe; border-radius:20px;box-shadow:2px 4px 6px #000;">
+       <br/><br/>
+    <h1 style="text-align: center">Please Enter SQL Statement</h1>
+   <form role="form" method="post" >
+       <div class="form-group" style="text-align: center">
+           <textarea class="form-control" style=" background-color:#f8fcfc;width: 500px; margin:0 auto;" name="SQL" placeholder="Please write SQL here" rows="8"></textarea>
+           <br/>
+               <label class="radio-inline">
+                   <input type="radio" name="optionsRadiosinline" id="optionsRadios1" value="option1" checked> QUERY
+               </label>
+                <label class="radio-inline">
+                    <input type="radio" name="optionsRadiosinline" id="optionsRadios1"  value="option2"> ALTER
+                </label>
+           <br/><br/>
+           <input type="password" class="form-control" style="background-color: #f8fcfc; width: 285px;margin:0 auto;" name="password" placeholder="Please input admin password to run SQL">
+           <br/><br/><br/><br/><button class="btn btn-success btn-lg" type="submit">GO</button>
+       </div>
+    </form>
+   </div>
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+   </body>
+</html>

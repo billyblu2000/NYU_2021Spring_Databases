@@ -274,19 +274,19 @@ def error500(error):
 @app.route('/admin/', methods=['POST', 'GET'])
 def admin():
     if request.method == 'GET':
-        return render_template('super.html')
+        if request.args.get('action'):
+            return render_template('admin_s.html')
+        return render_template('admin.html', s='Welcome, Admin!')
     else:
         if request.form.get('password') != 'god':
-            return 'Password Wrong'
-        stmta = request.form.get('SQLA')
-        print(stmta)
-        if stmta != "":
-            mt.root_sql_query(user='root', stmt=stmta)
-        stmtq = request.form.get('SQLQ')
-        if stmtq != "":
-            result = str(mt.root_sql_query(user='root', stmt=stmtq))
-            return result
-        return 'OK'
+            return render_template('admin.html', s='Wrong Password')
+        stmt = request.form.get('SQL')
+        print(stmt)
+        if request.form.get("optionsRadiosinline") == 'option2':
+            mt.root_sql_alter(user='root', stmt=stmt)
+        else:
+            result = str(mt.root_sql_query(user='root', stmt=stmt))
+            return render_template('admin.html',s='Here is the result:',result=result)
 
 
 if __name__ == '__main__':

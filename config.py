@@ -3,7 +3,7 @@ from datetime import timedelta
 # PROJECT
 HOST = '127.0.0.1'
 PORT = 5000
-DEBUG = True
+DEBUG = False
 SECRET_KEY = 'secret_key'
 
 
