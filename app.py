@@ -1,6 +1,6 @@
-import os
-
 from flask import Flask, session, request, render_template, redirect, Response
+
+import utils
 from mysql_tool import MySQLTool
 from config import *
 from hashlib import md5
@@ -200,56 +200,63 @@ def home():
 
 
 def home_guest():
-    departure_city = request.args.get('departure_city')
-    departure_airport = request.args.get('departure_airport')
-    if departure_city and departure_airport:
-        check = mt.guest_query(table='airport', attribute=['airport_name', 'airport_city'],
-                               value=[departure_airport, departure_city])
-        if len(check) != 1:
-            return ''
-    if departure_city and not departure_airport:
-        airports = mt.guest_query(table='airport', attribute='airport_city', value=departure_city)
-        if len(airports) > 0:
-            departure_airport = [airport[0] for airport in airports]
-        else:
-            return ''
-    arrival_city = request.args.get('arrival_city')
-    arrival_airport = request.args.get('arrival_airport')
-    if arrival_city and arrival_airport:
-        check = mt.guest_query(table='airport', attribute=['airport_name', 'airport_city'],
-                               value=[arrival_airport, arrival_city])
-        if len(check) != 1:
-            return ''
-    if arrival_city and not arrival_airport:
-        airports = mt.guest_query(table='airport', attribute='airport_city', value=arrival_city)
-        if len(airports) > 0:
-            arrival_airport = [airport[0] for airport in airports]
-        else:
-            return ''
-    departure_time = request.args.get('departure_time')
-    arrival_time = request.args.get('arrival_time')
-    airline = request.args.get('airline_name')
-    flight_num = None
-    if airline is not None:
-        flight_num = request.args.get('flight_num')
-        if flight_num is not None:
-            flight_num = int(flight_num)
+    airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
+    arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+
+    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    if departure_airport == False or arrival_airport == False:
+        return ''
+
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.guest_query(table='flight', attribute=attribute, value=value)
-    return mt.pretty(result)
+    return 'Home page: Guest' + '</br>' + mt.pretty(result)
 
 
 def home_customer(user):
-    return 'home of customer'
+    airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
+    arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+
+    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    if departure_airport == False or arrival_airport == False:
+        return ''
+
+    attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
+    value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
+    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    return 'Home page: customer ' + session['user'] + '</br>' + mt.pretty(result)
 
 
 def home_agent(user):
-    return 'home of booking agent'
+    airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
+    arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+
+    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    if departure_airport == False or arrival_airport == False:
+        return ''
+
+    attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
+    value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
+    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    return 'Home page: booking agent ' + session['user'] + '</br>' + mt.pretty(result)
 
 
 def home_staff(user):
-    return 'home of airline staff'
+    airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
+    arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+
+    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    if departure_airport == False or arrival_airport == False:
+        return ''
+
+    attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
+    value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
+    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    return 'Home page: airline staff ' + session['user'] + '</br>' + mt.pretty(result)
 
 
 @app.route('/profile/', methods=['POST', 'GET'])
