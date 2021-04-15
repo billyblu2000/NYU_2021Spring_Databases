@@ -202,26 +202,54 @@ def home():
 def home_guest():
     departure_city = request.args.get('departure_city')
     departure_airport = request.args.get('departure_airport')
+    if departure_city and departure_airport:
+        check = mt.guest_query(table='airport', attribute=['airport_name', 'airport_city'],
+                               value=[departure_airport, departure_city])
+        if len(check) != 1:
+            return ''
+    if departure_city and not departure_airport:
+        airports = mt.guest_query(table='airport', attribute='airport_city', value=departure_city)
+        if len(airports) > 0:
+            departure_airport = [airport[0] for airport in airports]
+        else:
+            return ''
     arrival_city = request.args.get('arrival_city')
     arrival_airport = request.args.get('arrival_airport')
+    if arrival_city and arrival_airport:
+        check = mt.guest_query(table='airport', attribute=['airport_name', 'airport_city'],
+                               value=[arrival_airport, arrival_city])
+        if len(check) != 1:
+            return ''
+    if arrival_city and not arrival_airport:
+        airports = mt.guest_query(table='airport', attribute='airport_city', value=arrival_city)
+        if len(airports) > 0:
+            arrival_airport = [airport[0] for airport in airports]
+        else:
+            return ''
     departure_time = request.args.get('departure_time')
     arrival_time = request.args.get('arrival_time')
-    flight_num = request.args.get('flight_num')
-    attribute = ['flight_num', 'departure_airport', 'departure_time', '']
-    # TODO
-    return 'home'
+    airline = request.args.get('airline_name')
+    flight_num = None
+    if airline is not None:
+        flight_num = request.args.get('flight_num')
+        if flight_num is not None:
+            flight_num = int(flight_num)
+    attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
+    value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
+    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    return mt.pretty(result)
 
 
 def home_customer(user):
-    pass
+    return 'home of customer'
 
 
 def home_agent(user):
-    pass
+    return 'home of booking agent'
 
 
 def home_staff(user):
-    pass
+    return 'home of airline staff'
 
 
 @app.route('/profile/', methods=['POST', 'GET'])

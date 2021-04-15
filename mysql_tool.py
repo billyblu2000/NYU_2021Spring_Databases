@@ -84,7 +84,7 @@ class MySQLTool:
 
     # guest can only do query on flight table
     def guest_query(self, table, attribute, value):
-        if table not in ['flight']:
+        if table not in ['flight','airport']:
             return None
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
@@ -211,9 +211,29 @@ class MySQLTool:
     # util method to do query, filling in table and values
     def __query_with_table_and_where(self, table, attribute, value):
         cursor = self._conn.cursor(prepared=True)
+        if type(attribute) is list:
+            assert len(attribute) == len(value)
+            new_attribute, new_value = [], []
+            for i in range(len(attribute)):
+                if value[i] is not None:
+                    new_attribute.append(attribute[i])
+                    new_value.append(value[i])
+            attribute, value = new_attribute, new_value
         sub_stmt = self.__create_stmt_attr_value(attribute=attribute, value=value)
-        stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
-        cursor.execute(stmt, value)
+        if sub_stmt != '':
+            stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
+        else:
+            stmt = 'SELECT * FROM ' + table
+        filled_in_values = []
+        if type(value) is list:
+            for i in value:
+                if type(i) is not list:
+                    filled_in_values.append(i)
+                else:
+                    filled_in_values += i
+        else:
+            filled_in_values = [value]
+        cursor.execute(stmt, filled_in_values)
         return cursor.fetchall()
 
     # util method to build sub_stmt, filling in attributes and values
@@ -224,6 +244,22 @@ class MySQLTool:
         assert len(attribute) == len(value)
         sub_stmt = ''
         for i in range(len(attribute)):
-            sub_stmt += 'AND ' + attribute[i] + ' = %s '
+            if type(value[i]) is list:
+                temp = '('
+                for j in range(len(value[i])):
+                    temp += '%s, '
+                temp = temp.rstrip(', ')
+                temp = temp + ') '
+                sub_stmt += 'AND ' + attribute[i] + ' in ' + temp
+            else:
+                sub_stmt += 'AND ' + attribute[i] + ' = %s '
         sub_stmt = sub_stmt.lstrip('AND')
         return sub_stmt
+
+    @staticmethod
+    def pretty(lst):
+        str_ = ''
+        for i in lst:
+            str_ += str(i) + '<br/>'
+        return str_
+
