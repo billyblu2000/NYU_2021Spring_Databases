@@ -320,6 +320,7 @@ def admin():
         print(stmt)
         if request.form.get("optionsRadiosinline") == 'option2':
             mt.root_sql_alter(user='root', stmt=stmt)
+            return render_template('admin.html', s='OK')
         else:
             result = mt.root_sql_query(user='root', stmt=stmt)
             for i in range(len(result)):
