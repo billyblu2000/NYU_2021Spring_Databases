@@ -88,20 +88,21 @@ def register_staff():
         dob = request.form.get('date_of_birth')
         airline_name = request.form.get('airline_name')
         permission_code = request.form.get('permission_code')
-
-        if not mt.root_check_exists(user='root', table='airline_stuff_permission_code',
+        if not mt.root_check_exists(user='root', table='airline_staff_permission_code',
                                     attribute='code', value=permission_code):
             return 'Wrong permission code'
-
+        print('2')
         # check duplicate
-        if mt.root_check_duplicates(table='airline_stuff', attribute='username', value=username, user='root'):
+        if mt.root_check_duplicates(table='airline_staff', attribute='username', value=username, user='root'):
             # duplicate
             # TODO
             return 'duplicate user'
+
         else:
+            print('3')
             md5_pass = md5(password.encode('utf-8')).hexdigest()
             new_id = mt.root_new_user_gen_id(user='root')
-            mt.root_insert(user='root', table='airline_stuff', value=[username, md5_pass, first_name, last_name, dob,
+            mt.root_insert(user='root', table='airline_staff', value=[username, md5_pass, first_name, last_name, dob,
                                                                       airline_name, new_id])
             # TODO
             session['user'] = username + ":A"
@@ -122,7 +123,7 @@ def login_customer():
                                 value=[email, md5_pass]):
             # login success
             session['user'] = email + ':C'
-            return 'login success as Customer'
+            return redirect('/home/', code=302, Response=None)
         else:
             # login unsuccessful
             return 'login failed'
@@ -143,7 +144,7 @@ def login_agent():
                                 value=[email, md5_pass]):
             # login success
             session['user'] = email + ':B'
-            return 'login success as booking agent'
+            return redirect('/home/', code=302, Response=None)
         else:
             # login unsuccessful
             return 'login failed'
@@ -164,7 +165,7 @@ def login_staff():
                                 value=[username, md5_pass]):
             # login success
             session['user'] = username + ':A'
-            return 'login success as Airline Staff'
+            return redirect('/home/', code=302, Response=None)
         else:
             # login unsuccessful
             return 'login failed'

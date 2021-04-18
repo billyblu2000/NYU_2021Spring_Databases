@@ -1,4 +1,7 @@
+import threading
 from functools import wraps
+from time import sleep
+
 from config import *
 
 import mysql.connector
@@ -51,6 +54,7 @@ class MySQLTool:
 
     # stored SQL queries and constants
     STMT_GET_ALL_AIRLINES = 'SELECT airline_name FROM airline'
+    STMT_GET_ALL_FLIGHTS = 'SELECT * FROM flight'
     A = 'airline_staff'
     B = 'booking_agent'
     C = 'customer'
@@ -67,6 +71,8 @@ class MySQLTool:
             password=DB_PASS,
             db=DB_NAME,
         )
+        refresh_thread = threading.Thread(target=self.__refresh_connection)
+        refresh_thread.start()
 
     def get_connection(self):
         return self._conn
@@ -83,8 +89,8 @@ class MySQLTool:
     # method will return None.
 
     # guest can only do query on flight table
-    def guest_query(self, table, attribute, value):
-        if table not in ['flight','airport']:
+    def guest_query(self, table, attribute=None, value=None):
+        if table not in ['flight', 'airport']:
             return None
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
@@ -171,6 +177,8 @@ class MySQLTool:
         cursor = self._conn.cursor(prepared=True)
         sub_stmt = self.__create_stmt_attr_value(attribute, value)
         stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
+        if type(value) is not list:
+            value = [value]
         cursor.execute(stmt, value)
         return len(cursor.fetchall())
 
@@ -224,6 +232,8 @@ class MySQLTool:
             stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
         else:
             stmt = 'SELECT * FROM ' + table
+            cursor.execute(stmt)
+            return cursor.fetchall()
         filled_in_values = []
         if type(value) is list:
             for i in value:
@@ -239,6 +249,8 @@ class MySQLTool:
     # util method to build sub_stmt, filling in attributes and values
     @staticmethod
     def __create_stmt_attr_value(attribute, value):
+        if attribute is None and value is None:
+            return ''
         if type(attribute) is not list:
             attribute, value = [attribute], [value]
         assert len(attribute) == len(value)
@@ -263,3 +275,17 @@ class MySQLTool:
             str_ += str(i) + '<br/>'
         return str_
 
+    def __refresh_connection(self):
+        while True:
+            try:
+                cursor = self._conn.cursor()
+                cursor.close()
+            except Exception as e:
+                self._conn.close()
+                self._conn = mysql.connector.connect(
+                    host=DB_HOST,
+                    user=DB_USER,
+                    password=DB_PASS,
+                    db=DB_NAME,
+                )
+            sleep(100)
