@@ -95,23 +95,69 @@ class MySQLTool:
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
     @validate_user(role='A')
-    def stuff_insert(self, user, table, value):
-        # TODO
-        pass
+    def staff_insert(self, user, table, value=None, create_ticket = True, ticket_number = None,
+                     airline_name = None, flight_num = None):
+        stmt = ''
+        if table == 'flight':
+            stmt += self.__staff_insert_flight(value)
+        if table == 'ticket' or create_ticket == True:
+            airplane_id = None
+            if value is not None:
+                if airplane_id is None:
+                    airline_name = value[0]
+                if flight_num is None:
+                    flight_num = value[1]
+                if ticket_number is None:
+                    airplane_id = value[-1]
+            else:
+                if airplane_id is None or flight_num is None or ticket_number is None:
+                    return False
+            stmt += self.__staff_insert_ticket(ticket_number, airline_name, flight_num, airplane_id)
+        if stmt == '':
+            return False
+        cursor = self._conn.cursor(prepared=True)
+        try:
+            cursor.execute(stmt,value)
+        except Exception as e:
+            self._conn.rollback()
+            return False
+        self._conn.commit()
+        return True
+
+    @staticmethod
+    def __staff_insert_flight(value):
+        sub_stmt = '('
+        for i in range(len(value)):
+            sub_stmt += '%s,'
+        sub_stmt = sub_stmt.rstrip(',')
+        sub_stmt += ');'
+        stmt = 'INSERT INTO flight VALUE ' + sub_stmt
+        return stmt
+
+    def __staff_insert_ticket(self, ticket_number, airline_name, flight_num, airplane_id):
+        if ticket_number is None:
+            if airplane_id is None:
+                return ''
+            # TODO make it prepared!!!
+            seats = self.root_sql_query(user='root', stmt='SELECT seats FROM airplane where airplane_id={id}'.format(
+                id=str(airplane_id)))
+        else:
+            seats = ticket_number
+
+        # get a ticket id
+        # existing_ticket = self.root_sql_query(user='root',stmt=)
+
 
     @validate_user(role='A')
     def stuff_update(self, user, table, value):
-        # TODO
         pass
 
     @validate_user(role='A')
     def stuff_del(self, user, table, value):
-        # TODO
         pass
 
     @validate_user(role='A')
     def stuff_query(self, user, table, value):
-        # TODO
         pass
 
     # customer can only do query on flight table and purchase table
@@ -144,9 +190,11 @@ class MySQLTool:
         else:
             for i in value:
                 filled_values += i
-            # TODO
         stmt = 'INSERT INTO {t} VALUES '.format(t=table) + sub_stmt
-        cursor.execute(stmt, filled_values)
+        try:
+            cursor.execute(stmt, filled_values)
+        except Exception as e:
+            self._conn.rollback()
         self._conn.commit()
 
     @validate_user(role='root')
@@ -157,8 +205,12 @@ class MySQLTool:
 
     @validate_user(role='root')
     def root_sql_alter(self, user, stmt):
-        cursor = self._conn.cursor()
-        cursor.execute(stmt)
+        try:
+            cursor = self._conn.cursor()
+            cursor.execute(stmt)
+        except Exception as e:
+            self._conn.rollback()
+            return False
         self._conn.commit()
         return True
 
@@ -195,7 +247,11 @@ class MySQLTool:
         cursor.execute('SELECT MAX(uid) FROM `user`')
         new_id = cursor.fetchone()[0] + 1
         cursor = self._conn.cursor()
-        cursor.execute('INSERT INTO `user` VALUE ({r})'.format(r=str(new_id)))
+        try:
+            cursor.execute('INSERT INTO `user` VALUE ({r})'.format(r=str(new_id)))
+        except Exception as e:
+            self._conn.rollback()
+            return None
         self._conn.commit()
         return new_id
 
@@ -209,7 +265,7 @@ class MySQLTool:
             stmt = 'SELECT uid FROM booking_agent WHERE email = %s'
         if role == "C":
             stmt = 'SELECT uid FROM customer WHERE email = %s'
-        cursor.execute(stmt, pk)
+        cursor.execute(stmt, [pk])
         return cursor.fetchall()
 
     # ############

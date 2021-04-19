@@ -16,7 +16,7 @@ mt = MySQLTool()
 @app.route('/register/customer/', methods=['POST', 'GET'])
 def register_customer():
     if request.method == 'GET':
-        return 'register_customer_get'
+        return render_template('register_customer.html')
     else:
         email = request.form.get('email')
         password = request.form.get('password')
@@ -25,7 +25,7 @@ def register_customer():
         street = request.form.get('street')
         city = request.form.get('city')
         state = request.form.get('state')
-        phone_number = request.form.get('phone_number')
+        phone_number = int(request.form.get('phone_number'))
         passport_number = request.form.get('passport_number')
         passport_expiration = request.form.get('passport_expiration')
         passport_country = request.form.get('passport_country')
@@ -45,7 +45,7 @@ def register_customer():
             # inform user
             # TODO
             session['user'] = email + ":C"
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
 
 
 @app.route('/register/agent/', methods=['POST', 'GET'])
@@ -72,7 +72,7 @@ def register_agent():
             # inform user
             # TODO
             session['user'] = email + ":B"
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
 
 
 @app.route('/register/staff/', methods=['POST', 'GET'])
@@ -91,28 +91,24 @@ def register_staff():
         if not mt.root_check_exists(user='root', table='airline_staff_permission_code',
                                     attribute='code', value=permission_code):
             return 'Wrong permission code'
-        print('2')
         # check duplicate
         if mt.root_check_duplicates(table='airline_staff', attribute='username', value=username, user='root'):
             # duplicate
-            # TODO
             return 'duplicate user'
 
         else:
-            print('3')
             md5_pass = md5(password.encode('utf-8')).hexdigest()
             new_id = mt.root_new_user_gen_id(user='root')
             mt.root_insert(user='root', table='airline_staff', value=[username, md5_pass, first_name, last_name, dob,
                                                                       airline_name, new_id])
-            # TODO
             session['user'] = username + ":A"
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
 
 
 @app.route('/login/customer/', methods=['POST', 'GET'])
 def login_customer():
     if 'user' in session.keys():
-        return redirect('/home/', code=302, Response=None)
+        return back_home()
 
     if request.method == 'GET':
         return render_template('login_customer.html')
@@ -123,7 +119,7 @@ def login_customer():
                                 value=[email, md5_pass]):
             # login success
             session['user'] = email + ':C'
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
         else:
             # login unsuccessful
             return 'login failed'
@@ -133,7 +129,7 @@ def login_customer():
 @app.route('/login/agent/', methods=['POST', 'GET'])
 def login_agent():
     if 'user' in session.keys():
-        return redirect('/home/', code=302, Response=None)
+        return back_home()
 
     if request.method == 'GET':
         return render_template('login_agent.html')
@@ -144,7 +140,7 @@ def login_agent():
                                 value=[email, md5_pass]):
             # login success
             session['user'] = email + ':B'
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
         else:
             # login unsuccessful
             return 'login failed'
@@ -154,7 +150,7 @@ def login_agent():
 @app.route('/login/staff/', methods=['POST', 'GET'])
 def login_staff():
     if 'user' in session.keys():
-        return redirect('/home/', code=302, Response=None)
+        return back_home()
 
     if request.method == 'GET':
         return render_template('login_staff.html')
@@ -165,7 +161,7 @@ def login_staff():
                                 value=[username, md5_pass]):
             # login success
             session['user'] = username + ':A'
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
         else:
             # login unsuccessful
             return 'login failed'
@@ -175,12 +171,12 @@ def login_staff():
 @app.route('/logout', methods=['POST', 'GET'])
 def log_out():
     session.clear()
-    return redirect('/home/', 302, Response=None)
+    return back_home()
 
 
 @app.route('/')
 def home_redirect():
-    return redirect('/home/', 302, Response=None)
+    return back_home()
 
 
 @app.route('/home/', methods=['POST', 'GET'])
@@ -195,7 +191,8 @@ def home():
         elif user_role == 'C':
             return home_customer(user=user)
         else:
-            return redirect('/home/', code=302, Response=None)
+            session.clear()
+            return back_home()
     else:
         return home_guest()
 
@@ -227,6 +224,12 @@ def home_customer(user):
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    if price:
+        actual_result = []
+        for i in result:
+            if price[0] <= i[6] <= price[1]:
+                actual_result.append(i)
+        result = actual_result
     return 'Home page: customer ' + session['user'] + '</br>' + mt.pretty(result)
 
 
@@ -270,7 +273,7 @@ def profile_redirect():
         return redirect('/profile/{uid}/'.format(uid=uid))
 
     else:
-        return redirect('/home/', code=302, Response=None)
+        return back_home()
 
 
 @app.route('/profile/<uid>/', methods=['POST', 'GET'])
@@ -282,6 +285,8 @@ def profile(uid):
             if mt.root_check_exists(user='root', table='airline_staff',
                                     attribute=['username', 'uid'], value=[user_name, uid]):
                 return profile_staff(user=session['user'])
+            else:
+                return
         elif user_role == 'B':
             if mt.root_check_exists(user='root', table='booking_agent',
                                     attribute=['email', 'uid'], value=[user_name, uid]):
@@ -291,21 +296,21 @@ def profile(uid):
                                     attribute=['email', 'uid'], value=[user_name, uid]):
                 return profile_customer(user=session['user'])
         else:
-            return redirect('/home/', code=302, Response=None)
+            return back_home()
     else:
-        return redirect('/home/', code=302, Response=None)
+        return back_home()
 
 
 def profile_customer(user):
-    pass
+    return 'profile of customer: ' + user
 
 
 def profile_agent(user):
-    pass
+    return 'profile of agent: ' + user
 
 
 def profile_staff(user):
-    pass
+    return 'profile of staff: ' + user
 
 
 @app.route('/admin/', methods=['POST', 'GET'])
@@ -323,7 +328,10 @@ def admin():
             mt.root_sql_alter(user='root', stmt=stmt)
             return render_template('admin.html', s='OK')
         else:
-            result = mt.root_sql_query(user='root', stmt=stmt)
+            try:
+                result = mt.root_sql_query(user='root', stmt=stmt)
+            except Exception as e:
+                return render_template('admin.html', s='Your SQL might be wrong!')
             for i in range(len(result)):
                 result[i] = str(result[i])
             return render_template('admin.html', s='Here is the result:', result=result)
@@ -341,12 +349,16 @@ def error404(error):
 
 @app.errorhandler(403)
 def error403(error):
-    return 'You have encountered a 403 error'
+    return 'You access was denied by the server!'
 
 
 @app.errorhandler(500)
 def error500(error):
-    return 'Oh no server crashed!'
+    return back_home()
+
+
+def back_home():
+    return redirect('/home/', code=302, Response=None)
 
 
 if __name__ == '__main__':
