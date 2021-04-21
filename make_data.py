@@ -45,7 +45,6 @@ class Airplane:
         return str_
 
 
-
 class Flight:
 
     def __init__(self, airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, price,
@@ -156,6 +155,7 @@ def make_flights(airports, airlines, airplanes, num):
         flights.append(flight)
     return flights
 
+
 def create_sql_insert(lst, table):
     sql = 'INSERT INTO {t} VALUES '.format(t=table)
     for i in lst:
@@ -233,7 +233,7 @@ if __name__ == '__main__':
             seats = random.randrange(100, 500, 10)
             airplanes.append(Airplane(airplane_id=id, airline=airlines[i], seats=seats))
     flights = make_flights(airports=airports, airlines=airlines, airplanes=airplanes, num=1000)
-    print(create_sql_insert(lst=airlines,table='airline'))
-    print(create_sql_insert(airports,table='airport'))
-    print(create_sql_insert(airplanes, table='airplane'))
+    # print(create_sql_insert(lst=airlines, table='airline'))
+    # print(create_sql_insert(airports, table='airport'))
+    # print(create_sql_insert(airplanes, table='airplane'))
     print(create_sql_insert(flights, table='flight'))

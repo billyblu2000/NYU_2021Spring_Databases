@@ -361,6 +361,14 @@ def back_home():
     return redirect('/home/', code=302, Response=None)
 
 
+@app.route('/test/')
+def test():
+    # value = ['Hainan Airlines', 9185627, 'CAN', '2021-06-01 12:52:12', 'SZX', '2021-06-01 18:51:51', 2133, 'upcoming',
+    #          9851208]
+    # mt.staff_insert(user=session['user'], table='flight', value=value, create_ticket=True)
+    return 'ok'
+
+
 if __name__ == '__main__':
 
     if DEBUG:

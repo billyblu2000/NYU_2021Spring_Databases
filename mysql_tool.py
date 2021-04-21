@@ -1,3 +1,4 @@
+import random
 import threading
 from functools import wraps
 from time import sleep
@@ -6,47 +7,7 @@ from config import *
 
 import mysql.connector
 
-
-# decorator to validate user before method executed
-def validate_user(role="ABC"):
-    def decorator(func):
-
-        @wraps(func)
-        def decorated(*args, **kwargs):
-
-            user = kwargs['user']
-
-            if user == 'root':
-                return func(*args, **kwargs)
-
-            key, identity = user[:-2], user[-1]
-            cursor = args[0].get_connection().cursor(prepared=True)
-
-            if identity not in role:
-                print("Unauthorized user")
-                return None
-
-            if identity == 'A':
-                stmt = 'SELECT username FROM airline_staff WHERE username = %s'
-            elif identity == 'B':
-                stmt = 'SELECT email FROM booking_agent WHERE email = %s'
-            elif identity == 'C':
-                stmt = 'SELECT email FROM customer WHERE email = %s'
-            else:
-                raise Exception("Can't understand user when validation")
-
-            cursor.execute(stmt, [key])
-            result = cursor.fetchall()
-
-            if len(result) == 1:
-                return func(*args, **kwargs)
-            else:
-                print("Unknown user, database query and alteration stopped!")
-                return None
-
-        return decorated
-
-    return decorator
+from utils import validate_user
 
 
 class MySQLTool:
@@ -95,11 +56,11 @@ class MySQLTool:
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
     @validate_user(role='A')
-    def staff_insert(self, user, table, value=None, create_ticket = True, ticket_number = None,
-                     airline_name = None, flight_num = None):
-        stmt = ''
+    def staff_insert(self, user, table, value=None, create_ticket=True, ticket_number=None,
+                     airline_name=None, flight_num=None):
+        flight_stmt, ticket_stmt, ticket_values = '', '', []
         if table == 'flight':
-            stmt += self.__staff_insert_flight(value)
+            flight_stmt += self.__staff_insert_flight(value)
         if table == 'ticket' or create_ticket == True:
             airplane_id = None
             if value is not None:
@@ -112,13 +73,18 @@ class MySQLTool:
             else:
                 if airplane_id is None or flight_num is None or ticket_number is None:
                     return False
-            stmt += self.__staff_insert_ticket(ticket_number, airline_name, flight_num, airplane_id)
-        if stmt == '':
+            ticket_stmt, ticket_values = self.__staff_insert_ticket(ticket_number, airline_name, flight_num, airplane_id)
+        if flight_stmt == '' and ticket_stmt == '':
             return False
-        cursor = self._conn.cursor(prepared=True)
         try:
-            cursor.execute(stmt,value)
+            if flight_stmt != '':
+                cursor = self._conn.cursor(prepared=True)
+                cursor.execute(flight_stmt, value)
+            if ticket_stmt != '':
+                cursor = self._conn.cursor(prepared=True)
+                cursor.execute(ticket_stmt, ticket_values)
         except Exception as e:
+            print(e)
             self._conn.rollback()
             return False
         self._conn.commit()
@@ -138,15 +104,32 @@ class MySQLTool:
         if ticket_number is None:
             if airplane_id is None:
                 return ''
-            # TODO make it prepared!!!
-            seats = self.root_sql_query(user='root', stmt='SELECT seats FROM airplane where airplane_id={id}'.format(
-                id=str(airplane_id)))
+            seats = self.root_sql_query(user='root', stmt='SELECT seats FROM airplane where airplane_id=%s',
+                                        value=[airplane_id])[0][0]
+            seats //= 10
         else:
             seats = ticket_number
 
-        # get a ticket id
-        # existing_ticket = self.root_sql_query(user='root',stmt=)
+        # get ticket ids
+        existing_ticket_id = self.root_sql_query(user='root',stmt='SELECT ticket_id FROM ticket WHERE flight_num=%s',
+                                                 value=[flight_num])
+        existing_ticket_id = [i[0] for i in existing_ticket_id]
 
+        # create tickets with random ids
+        if seats <= 0:
+            return '', []
+        sub_stmt = 'INSERT INTO ticket VALUES '
+        values = []
+        for i in range(seats):
+            id = random.randint(10000, 99999)
+            while id in existing_ticket_id:
+                id = random.randint(10000, 99999)
+            existing_ticket_id.append(id)
+            sub_stmt += '(%s,%s,%s),'
+            values += [id, airline_name, flight_num]
+        sub_stmt = sub_stmt.rstrip(',')
+        sub_stmt += ';'
+        return sub_stmt, values
 
     @validate_user(role='A')
     def stuff_update(self, user, table, value):
@@ -166,6 +149,15 @@ class MySQLTool:
         if table not in ['flight', 'purchase']:
             return None
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
+
+    @validate_user(role='C')
+    def customer_insert(self, user, table, attribute, value):
+        if table == 'purchase':
+            pass
+
+    @validate_user(role='C')
+    def customer_del(self, user, table, attribute, value):
+        pass
 
     # agent can only do query on flight table and purchase table
     @validate_user(role='B')
@@ -198,10 +190,15 @@ class MySQLTool:
         self._conn.commit()
 
     @validate_user(role='root')
-    def root_sql_query(self, user, stmt):
-        cursor = self._conn.cursor()
-        cursor.execute(stmt)
-        return cursor.fetchall()
+    def root_sql_query(self, user, stmt, value=None):
+        if not value:
+            cursor = self._conn.cursor()
+            cursor.execute(stmt)
+            return cursor.fetchall()
+        else:
+            cursor = self._conn.cursor(prepared=True)
+            cursor.execute(stmt,value)
+            return cursor.fetchall()
 
     @validate_user(role='root')
     def root_sql_alter(self, user, stmt):
@@ -337,7 +334,6 @@ class MySQLTool:
                 cursor = self._conn.cursor()
                 cursor.close()
             except Exception as e:
-                self._conn.close()
                 self._conn = mysql.connector.connect(
                     host=DB_HOST,
                     user=DB_USER,
