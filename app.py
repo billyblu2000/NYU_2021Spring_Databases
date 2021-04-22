@@ -32,7 +32,7 @@ def register_customer():
         street = request.form.get('street')
         city = request.form.get('city')
         state = request.form.get('state')
-        phone_number = int(request.form.get('phone_number'))
+        phone_number = request.form.get('phone_number')
         passport_number = request.form.get('passport_number')
         passport_expiration = request.form.get('passport_expiration')
         passport_country = request.form.get('passport_country')
@@ -52,7 +52,7 @@ def register_customer():
         elif len(city) >= 30 or len(state)>= 30 or len(building_number)>=30 or len(street) >= 30:
             return render_template('register-customer.html', error = 'Your address is too long!')
 
-        elif len(str(phone_number)) != 11:
+        elif len(phone_number) != 11:
             return render_template('register-customer.html', error = 'Please enter a real phone number!')
 
         elif len(passport_number) >= 30:
@@ -62,6 +62,11 @@ def register_customer():
             return render_template('register-customer.html', error = 'Your passport country is too long!')
 
         else:
+            try:
+                phone_number = int(phone_number)
+            except:
+                return render_template('register-customer.html', error='Please enter a real phone number!')
+
             try:
                 lst = dob.split("-")
                 d = datetime.date(day=int(lst[2]), month=int(lst[1]), year=int(lst[0]))
