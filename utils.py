@@ -15,6 +15,10 @@ useful_sqls = ["-------------------------",
                "SELECT airline_name, departure_airport, arrival_airport, departure_time, price, purchase_date "
                "FROM (purchases INNER JOIN ticket USING (ticket_id)) INNER JOIN flight USING (airline_name, flight_num) "
                "WHERE customer_email = ''",
+               "Return spent in a date interval",
+               "SELECT SUM(price) "
+               "FROM (purchases INNER JOIN ticket USING (ticket_id)) INNER JOIN flight USING (airline_name, flight_num) "
+               "WHERE purchase_date > '' AND purchase_date < ''",
                ]
 
 
@@ -237,4 +241,8 @@ def normalized(lst, mode='penal_small'):
 
 
 if __name__ == '__main__':
-    pass
+    d = datetime.datetime(year=2021,month=5,day=1)
+    if d > datetime.datetime.now():
+        print(1)
+    else:
+        print(0)

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+    <title>Register</title>
+		<style>
+			body{
+				margin: 0;
+				padding: 0;
+				font-family: sans-serif;
+				background: #34495e;
+			}
+			.box{
+				width: 300px;
+				padding: 40px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%,-50%);
+				background: #191919;
+				text-align: center;
+			}
+			.box h1{
+				color: white;
+				text-transform: uppercase;
+				font-weight: 500;
+				margin: 20px auto;
+			}
+			.box input[type = "text"],.box input[type = "password"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 200px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "name"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 80px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "text"]:focus,.box input[type = "password"]:focus{
+				width: 280px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "name"]:focus{
+				width: 120px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "submit"]{
+				border:0;
+				background: none;
+				display: block;
+				margin: 20px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 40px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			.box input[type = "submit"]:hover{
+				background: #2ecc71;
+			}
+
+			.box input[type = "button"]{
+				color: white;
+				font-size: 80%;
+				background: none;
+				display: inline-flex;
+				height: 50px;
+				width: 70px;
+				margin: 10px auto;
+				margin-right: 10px;
+				align-items: center;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				justify-content: center;
+				padding: 14px 40px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: .3s linear;
+				cursor: pointer;
+			}
+			.box input[type = "button"]:hover{
+				background: #2ecc71;
+			}
+			.box input[type = "button"]:focus{
+				background: #2ecc71;
+			}
+			
+			a{
+				background: none;
+				color: white;
+				font-size: 80%;
+				text-decoration: initial;
+				width: 80px;
+				height: 15px;
+				border:0;
+				display: block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 20px;
+				outline: none;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			a:hover{
+				background-color: #2ecc71;
+			}
+            select{
+                border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 220px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+                text-align-last: center;
+            }
+            select:focus{
+				border-color: #2ecc71;
+			}
+            option{
+                text-align:center;
+            }
+            .select_gray{
+                color: gray;
+            }
+            .select_white{
+                color: white;
+            }
+            .error{
+                color: #c7254e;
+            }
+
+			</style>
+	</head>
+<body>
+<script>
+
+</script>
+<form class="box" action="/register/staff/" method="POST">
+<h1>Staff Register</h1>
+		
+		<input type="text" name = "username" placeholder="Username" required/> </br>
+		<input type="password" name = "password" placeholder="Password" required/></br>
+		<input type="name"  name = "first_name" placeholder="First Name" required/>
+		<input type="name"  name = "last_name" placeholder="Last Name" required/>
+		<input type="text" name = "date_of_birth" placeholder="Date of Birth (Year-Month-Day)" required/></br>
+        <label>
+            <select id="select" name="airline_name" class="select_gray" required>
+                <option disabled selected hidden value="airline">Airline</option>
+                {% for i in airlines %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <input type="text" name = "permission_code" placeholder="Permission Code" required/></br>
+y
+    <input type="submit" name="" value = Register />
+	<a href="/register/">Go back</a>
+	{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+</form>
+<script>
+var targetoSelect = document.getElementById("select");
+targetoSelect.onchange = function(ev) {
+    var target = ev.target;
+    target.classList.remove("select_gray");
+    target.classList.add("select_white");
+
+}
+</script>>
+</body>
+
+</html>

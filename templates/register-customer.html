@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+    <title>Register</title>
+		<style>
+			body{
+				margin: 0;
+				padding: 0;
+				font-family: sans-serif;
+				background: #34495e;
+			}
+			.box{
+				width: 300px;
+				padding: 40px;
+				position: absolute;
+				top: 60%;
+				left: 50%;
+				transform: translate(-50%,-50%);
+				background: #191919;
+				text-align: center;
+			}
+			.box h1{
+				color: white;
+				text-transform: uppercase;
+				font-weight: 500;
+				margin: 10px auto;
+			}
+			.box input[type = "text"],.box input[type = "password"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 200px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "address"], .box input[type = "info"], .box input[type = "passport"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 80px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "text"]:focus,.box input[type = "password"]:focus{
+				width: 280px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "address"]:focus, .box input[type = "info"]:focus .box input[type = "passport"]:focus{
+				width: 120px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "submit"]{
+				border:0;
+				background: none;
+				display: block;
+				margin: 20px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 40px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			.box input[type = "submit"]:hover{
+				background: #2ecc71;
+			}
+
+			.box input[type = "button"]{
+				color: white;
+				font-size: 80%;
+				background: none;
+				display: inline-flex;
+				height: 50px;
+				width: 70px;
+				margin: 10px auto;
+				margin-right: 15px;
+				align-items: center;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				justify-content: center;
+				padding: 14px 40px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: .3s linear;
+				cursor: pointer;
+			}
+			.box input[type = "button"]:hover{
+				background: #2ecc71;
+			}
+			.box input[type = "button"]:focus{
+				background: #2ecc71;
+			}
+			
+			a{
+				background: none;
+				color: white;
+				font-size: 80%;
+				text-decoration: initial;
+				width: 80px;
+				height: 15px;
+				border:0;
+				display: block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 20px;
+				outline: none;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			a:hover{
+				background-color: #2ecc71;
+			}
+            .error{
+                color: #c7254e;
+            }
+
+
+			</style>
+	</head>
+<body>
+<script>
+
+</script>
+<form class="box" action="/register/customer/" method="POST">
+<h1>Customer Register</h1>
+		
+		<input type="text" name = "email" placeholder="Email" required/> </br>
+		<input type="password" name = "password" placeholder="Password" required/></br>
+		<input type="text" name = "name" placeholder="Your full name" required/> </br>
+		<input type="info" name = "date_of_birth" placeholder="Birthday" required/>
+		<input type="info" name = "phone_number" placeholder="Phone"/></br><hr color=#555555  style="width: 70%"/>
+		<input type="address" name = "state" placeholder="State"/>
+		<input type="address" name = "city" placeholder="City"/>
+		<input type="address" name = "street" placeholder="Street"/>
+		<input type="address" name = "building_number" placeholder="Building Number"/></br><hr color=#555555  style="width: 70%"/>
+		<input type="text" name = "passport_number" placeholder="Passport Number" required/>
+		<input type="passport" name = "passport_country" placeholder="Country"/>
+		<input type="passport" name = "passport_expiration" placeholder="Expiration"/>
+		
+		<input type="submit" name="" value = Register />
+		<a href="/register/">Go back</a>
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+</form>
+
+</body>
+
+</html>
