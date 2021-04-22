@@ -1,3 +1,5 @@
+import datetime
+
 from flask import Flask, session, request, render_template, redirect, Response
 
 import utils
@@ -318,7 +320,7 @@ def admin():
     if request.method == 'GET':
         if request.args.get('action'):
             return render_template('admin_s.html')
-        return render_template('admin.html', s='Welcome, Admin!')
+        return render_template('admin.html', s='Welcome, Admin!', result=utils.useful_sqls)
     else:
         if request.form.get('password') not in ADMIN:
             return render_template('admin.html', s='Wrong Password')
@@ -363,10 +365,16 @@ def back_home():
 
 @app.route('/test/')
 def test():
-    # value = ['Hainan Airlines', 9185627, 'CAN', '2021-06-01 12:52:12', 'SZX', '2021-06-01 18:51:51', 2133, 'upcoming',
-    #          9851208]
-    # mt.staff_insert(user=session['user'], table='flight', value=value, create_ticket=True)
-    return 'ok'
+    num = request.args.get('num')
+    if num is None:
+        num = 10
+    else:
+        num = int(num)
+    if 'user' in session.keys():
+        rec = utils.get_recommendations(mt, user=session['user'], how_many=num)
+        return mt.pretty(rec)
+    else:
+        return ''
 
 
 if __name__ == '__main__':

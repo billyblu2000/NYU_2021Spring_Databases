@@ -151,9 +151,28 @@ class MySQLTool:
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
     @validate_user(role='C')
-    def customer_insert(self, user, table, attribute, value):
-        if table == 'purchase':
-            pass
+    def customer_insert(self, user, table, value):
+        if table == 'purchases':
+            cursor = self._conn.cursor(prepared=True)
+            if value[2] is None:
+                stmt = 'INSERT INTO purchases VALUE (%s,%s, NULL, %s)'
+                try:
+                    cursor.execute(stmt, value[:2]+[value[3]])
+                except Exception as e:
+                    print(e)
+                    self._conn.rollback()
+                    return False
+            else:
+                stmt = 'INSERT INTO purchases VALUE (%s,%s,%s,%s)'
+                try:
+                    cursor.execute(stmt, value)
+                except Exception as e:
+                    self._conn.rollback()
+                    return False
+            self._conn.commit()
+            return True
+        else:
+            return False
 
     @validate_user(role='C')
     def customer_del(self, user, table, attribute, value):
@@ -324,6 +343,8 @@ class MySQLTool:
     @staticmethod
     def pretty(lst):
         str_ = ''
+        if lst is None:
+            return str_
         for i in lst:
             str_ += str(i) + '<br/>'
         return str_
