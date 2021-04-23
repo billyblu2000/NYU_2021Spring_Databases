@@ -149,7 +149,7 @@ def register_staff():
             return render_template('register-staff.html', airlines= airlines, error = 'User already exists!')
         elif len(first_name) >= 50 or len(last_name)>=50:
             return render_template('register-staff.html', airlines= airlines, error = 'Your name is too long!')
-        elif airline_name == 'airline':
+        elif airline_name == 'airline' or airline_name == None:
             return render_template('register-staff.html', airlines=airlines, error='Please select airline!')
         else:
             try:
@@ -160,9 +160,12 @@ def register_staff():
                                                                                           'birthday!')
             md5_pass = md5(password.encode('utf-8')).hexdigest()
             new_id = mt.root_new_user_gen_id(user='root')
-            mt.root_insert(user='root', table='airline_staff', value=[username, md5_pass, first_name, last_name, dob,
-                                                                      airline_name, new_id])
-            session['user'] = username + ":A"
+            if mt.root_insert(user='root', table='airline_staff', value=[username, md5_pass, first_name, last_name, dob,
+                                                                      airline_name, new_id]):
+                session['user'] = username + ":A"
+            else:
+                return render_template('register-staff.html', airlines= airlines, error = 'Register failed, please '
+                                                                                          'try again later!')
             return back_home()
 
 

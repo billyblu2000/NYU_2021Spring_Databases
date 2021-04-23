@@ -206,7 +206,9 @@ class MySQLTool:
             cursor.execute(stmt, filled_values)
         except Exception as e:
             self._conn.rollback()
+            return False
         self._conn.commit()
+        return True
 
     @validate_user(role='root')
     def root_sql_query(self, user, stmt, value=None):
