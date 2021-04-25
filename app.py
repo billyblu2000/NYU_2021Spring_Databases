@@ -17,7 +17,7 @@ mt = MySQLTool()
 
 @app.route('/register/')
 def register():
-    return render_template('index.html')
+    return render_template('home.html')
 
 
 @app.route('/register/customer/', methods=['POST', 'GET'])
