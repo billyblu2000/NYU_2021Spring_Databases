@@ -6,7 +6,21 @@ Authored by Billy Yi[^1] and Ziyang Liao[^2]
 
 ## Catalogue
 
-[TOC]
+- [Databases Final Project Manual](#databases-final-project-manual)
+  * [Catalogue](#catalogue)
+  * [Project Structure](#project-structure)
+  * [Function Introduction and Usage](#function-introduction-and-usage)
+    + [General Discreption](#general-discreption)
+    + [Functions for Different Roles](#functions-for-different-roles)
+        * [Public (Guest)](#public--guest-)
+        * [Login and Register](#login-and-register)
+        * [Users](#users)
+          + [Customer](#customer)
+          + [Booking Agent](#booking-agent)
+          + [Airline Staff](#airline-staff)
+  * [Acknowledge](#acknowledge)
+
+
 
 ## Project Structure
 
