@@ -1,51 +1,329 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html>
+    <head>
+        <meta charset="utf-8">
+    	<title>Flight Ticket Booking</title>
+        
+    </head>
+<body>
+    <section class="banner" id="top">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="tabs-content">
+                        <form class="box">
+                            <h2>Do you have an account?</h2>
+                                <a href="/register-staff">Register as Staff</a>
+                                <a href="/register-customer">Register as Customer</a>
+                                <a href="/register-agent">Register as Agent</a>
+                            <h2>Already have one?</h2>
+                                <a href="/login">Login</a>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-5 col-md-offset-1">
+                    <div class="submit-form">
+                        <h4>Check availability for <em>direction</em>:</h4>
+                        <form id="form-submit" action="" method="get">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <fieldset>
+                                        <label for="from">From:</label>
+                                        <select required name='from' onchange='this.form.()'>
+                                            <option value="">Select a location...</option>
+                                            <option value="Cambodia">Cambodia</option>
+                                            <option value="Hong Kong">Hong Kong</option>
+                                            <option value="India">India</option>
+                                            <option value="Japan">Japan</option>
+                                            <option value="Korea">Korea</option>
+                                            <option value="Laos">Laos</option>
+                                            <option value="Myanmar">Myanmar</option>
+                                            <option value="Singapore">Singapore</option>
+                                            <option value="Thailand">Thailand</option>
+                                            <option value="Vietnam">Vietnam</option>
+                                        </select>
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6">
+                                    <fieldset>
+                                        <label for="to">To:</label>
+                                        <select required name='to' onchange='this.form.()'>
+                                            <option value="">Select a location...</option>
+                                            <option value="Cambodia">Cambodia</option>
+                                            <option value="Hong Kong">Hong Kong</option>
+                                            <option value="India">India</option>
+                                            <option value="Japan">Japan</option>
+                                            <option value="Korea">Korea</option>
+                                            <option value="Laos">Laos</option>
+                                            <option value="Myanmar">Myanmar</option>
+                                            <option value="Singapore">Singapore</option>
+                                            <option value="Thailand">Thailand</option>
+                                            <option value="Vietnam">Vietnam</option>
+                                        </select>
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6">
+                                    <fieldset>
+                                        <label for="departure">Departure date:</label>
+                                        <input name="deparure" type="date" class="form-control date" id="deparure" placeholder="Select date..." required="" onchange='this.form.()'>
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6">
+                                    <fieldset>
+                                        <label for="return">Return date:</label>
+                                        <input name="return" type="date" class="form-control date" id="return" placeholder="Select date..." required="" onchange='this.form.()'>
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="radio-select">
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                                <label for="round">Round</label>
+                                                <input type="radio" name="trip" id="round" value="round" required="required"onchange='this.form.()'>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                                <label for="oneway">Oneway</label>
+                                                <input type="radio" name="trip" id="oneway" value="one-way" required="required"onchange='this.form.()'>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <form class="box">
+                                        <fieldset>
+                                            <input type="submit" value = "Order Ticket Now" ></button>
+                                        </fieldset>
+                                    </form>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="tabs-content" id="recommended-flight">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="section-heading">
+                        <h2>Recommended Flights For You</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<style>
+	* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Open Sans', arial, sans-serif;
+    }
+        body {
+            overflow-x: hidden;
+            background-color: #fff;
+        }
 
-<head>
-	<meta charset="utf-8">
-  <title>Index</title>
-	<style>
-		body{
-			margin: 0;
-			padding: 0;
-			font-family: sans-serif;
-			background: #34495e;
-				}
+        .section-heading h2 {
+            margin-top: 0px;
+            margin-bottom: 60px;
+            text-align: center;
+            font-size: 24px;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: #121212;
+        }
+
+        .banner {
+            background-image: url(../static/img/banner-bg.jpg);
+            background-repeat: no-repeat;
+            background-size: 1600px 900px;
+            background-position: center center;
+            text-align: center;
+        }
+
+        .banner .left-side {
+            text-align: left;
+            background-color: rgba(0, 0, 0, 0.5);
+            height: 100%;
+            margin-left: -100vh;
+            padding-left: 100vh;
+        }
+
+        .banner .page-direction-button {
+            margin-top: 120px;
+        }
+
+        .banner .tabs-content {
+            margin-top: 120px;
+        }
+
+        .banner .tabs-content h4 {
+            margin-top: 0px;
+            margin-bottom: 40px;
+            font-size: 24px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .banner .submit-form {
+            text-align: left;
+            margin: 155px 0px;
+            background-color: rgba(250, 250, 250, 0.95);
+            padding: 30px;
+        }
+
+        .submit-form h4 {
+            width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            display: inline-block;
+            border-bottom: 1px solid #dbdada;
+        }
+
+        .submit-form h4 em {
+            font-style: normal;
+        }
+
+        .submit-form label {
+            margin-top: 10px;
+            float: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #121212;
+        }
+
+        .submit-form select {
+            margin-bottom: 10px;
+            width: 100%;
+            height: 36px;
+            border: none;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            outline: none;
+            padding: 0px 10px;
+            display: inline-block;
+        }
+
+        .submit-form .date {
+            margin-bottom: 10px;
+            width: 100%;
+            height: 36px;
+            border: none;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            outline: none;
+            padding-left: 15px;
+            margin-left: 0px;
+            display: inline-block;
+            box-shadow: none;
+            border-radius: 0px;
+        }
+
+        .submit-form input {
+            margin-top: 12px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .submit-form .radio-select {
+            margin-top: 15px;
+        }
+
+        .submit-form input {
+            
+            background: none;
+            display: block;
+            margin: 40px auto;
+            
+            text-align: center;
+            border: 2px solid #2ecc71;
+            padding: 14px 40px;
+            outline: none;
+            color: black;
+            border-radius: 24px;
+            transition: 0.25s;
+            cursor: pointer;
+        }
+        #recommended-flight {
+            margin-top: 100px;
+            background-color: #f4f4f4;
+            padding: 80px 0px;
+        }
+        #recommended-flight .tabs {
+        list-style: none;
+        margin-top: 0px;
+        padding-right: 0px;
+        }
+
+        .map {
+            background-color: #f4f4f4;
+            padding: 100px 0px;
+        }
+
+        @media (max-width: 991px) {
+            .banner .left-side {
+                text-align: center;
+                overflow: hidden;
+                padding-left: 0vh;
+                margin-left: -50vh;
+                margin-right: -50vh;
+                padding-right: 50vh;
+                padding-left: 50vh;
+            }
+            .banner .tabs-content {
+                margin-top: 60px;
+            }
+            .banner .submit-form {
+                margin: 30px 30px;
+            }	
+        }
 		.box{
 			width: 300px;
-			padding: 40px;
+			padding: 30px;
 			position: absolute;
-			top: 50%;
+			top: 100%;
 			left: 50%;
-			transform: translate(-50%,-50%);
-			background: #191919;
+			transform: translate(-50%,0);
+			background-color: rgba(250, 250, 250, 0.95);
 			text-align: center;
 			}
 		.box h1{
-			color: white;
+			color: black;
 			text-transform: uppercase;
 			font-weight: 500;
 			margin: 40px auto;
 		}
 		.box h2{
-			color: white;
-			text-transform: uppercase;
-			font-weight: 500;
-			margin: 20px auto;
+			width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0px;
+            margin-bottom: 10px;
+            padding-bottom: 20px;
+            display: inline-block;
+            border-bottom: 1px solid #dbdada;
 		}
-		a{
+        a{
 			background: none;
-			color: white;
-			font-size: 80%;
-			text-decoration: initial;
-			width: 150px;
-			height: 15px;
+			color: black;
+			font-size: 70%;
+			width: 180px;
+			height: 50px;
 			border:0;
 			display: block;
 			margin: 20px auto;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
 			text-align: center;
 			border: 2px solid #2ecc71;
-			padding: 14px 20px;
+			padding: 14px 10px;
 			outline: none;
 			border-radius: 24px;
 			transition: 0.25s;
@@ -55,20 +333,6 @@
 			background-color: #2ecc71;
 			}
 	</style>
-</head>
-
-<body>
-<form class="box">
-
-	<h1>Do you have an account?</h1>
-		<a href="/register/staff/">Register as Staff</a>
-		<a href="/register/customer/">Register as Customer</a>
-		<a href="/register/agent/">Register as Agent</a>
-		<h2>Already have one?</h2>
-		<a href="/login">Login</a>
-		
-	
-</form>
-</body>
-
+<link rel="stylesheet" type= "text/css" href="{{ url_for('static',filename='css/bootstrap.css') }}">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
 </html>

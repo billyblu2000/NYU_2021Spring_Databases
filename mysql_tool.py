@@ -1,7 +1,6 @@
 import random
 import threading
-from functools import wraps
-from time import sleep
+import time
 
 from config import *
 
@@ -351,16 +350,29 @@ class MySQLTool:
             str_ += str(i) + '<br/>'
         return str_
 
-    def __refresh_connection(self):
-        while True:
-            try:
-                cursor = self._conn.cursor()
-                cursor.close()
-            except Exception as e:
-                self._conn = mysql.connector.connect(
-                    host=DB_HOST,
-                    user=DB_USER,
-                    password=DB_PASS,
-                    db=DB_NAME,
-                )
-            sleep(100)
+    def __refresh_connection(self, thread = True):
+        if thread:
+            while True:
+                try:
+                    cursor = self._conn.cursor()
+                    cursor.close()
+                    print(time.asctime(time.localtime()),"Check DB Connection: Ok")
+                except Exception as e:
+                    self._conn = mysql.connector.connect(
+                        host=DB_HOST,
+                        user=DB_USER,
+                        password=DB_PASS,
+                        db=DB_NAME,
+                    )
+                    print(time.asctime(time.localtime()),"Check DB Connection: Refreshed")
+                time.sleep(100)
+        else:
+            self._conn = mysql.connector.connect(
+                host=DB_HOST,
+                user=DB_USER,
+                password=DB_PASS,
+                db=DB_NAME,
+            )
+
+    def refresh(self):
+        self.__refresh_connection(thread=False)

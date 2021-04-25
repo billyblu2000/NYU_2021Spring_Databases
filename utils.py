@@ -110,13 +110,22 @@ def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, a
     return None
 
 
-@validate_user(role='C')
+@validate_user(role='BC')
 def get_recommendations(mysqltool, user, how_many):
     all_flights = mysqltool.guest_query(table='flight')
     stmt = 'SELECT airline_name, departure_airport, arrival_airport, departure_time, price, purchase_date ' \
            'FROM (purchases INNER JOIN ticket USING (ticket_id)) INNER JOIN flight USING (airline_name, flight_num) ' \
-           'WHERE customer_email = %s'
-    all_user_flights = mysqltool.root_sql_query(user='root', stmt=stmt, value=[user[:-2]])
+           'WHERE {t} = %s'
+    if user[-1] == 'C':
+        c_stmt = stmt.format(t='customer_email')
+        all_user_flights = mysqltool.root_sql_query(user='root', stmt=c_stmt, value=[user[:-2]])
+    else:
+        b1_stmt = 'SELECT booking_agent_id FROM booking_agent WHERE email = %s'
+        agent_id = mysqltool.root_sql_query(user='root', stmt=b1_stmt, value=[user[:-2]])[0][0]
+        b2_stmt = stmt.format(t='booking_agent_id')
+        all_user_flights = mysqltool.root_sql_query(user='root', stmt=b2_stmt, value=[agent_id])
+    if len(all_user_flights) == 0:
+        return []
     recommended_flights = []
     p = recommendations_params
     weights = np.zeros(shape=(4, 1), dtype=float)

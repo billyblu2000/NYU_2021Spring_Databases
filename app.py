@@ -41,25 +41,25 @@ def register_customer():
         if mt.root_check_duplicates(table='customer', attribute='email', value=email, user='root'):
             # duplicate
             # TODO
-            return render_template('register-customer.html', error = 'User already exists!')
+            return render_template('register-customer.html', error='User already exists!')
 
         elif len(email) >= 50 or len(email.split("@")) < 2:
-            return render_template('register-customer.html', error = 'Please enter a valid email!')
+            return render_template('register-customer.html', error='Please enter a valid email!')
 
         elif len(name) >= 50:
-            return render_template('register-customer.html', error = 'Your name is too long!')
+            return render_template('register-customer.html', error='Your name is too long!')
 
-        elif len(city) >= 30 or len(state)>= 30 or len(building_number)>=30 or len(street) >= 30:
-            return render_template('register-customer.html', error = 'Your address is too long!')
+        elif len(city) >= 30 or len(state) >= 30 or len(building_number) >= 30 or len(street) >= 30:
+            return render_template('register-customer.html', error='Your address is too long!')
 
         elif len(phone_number) != 11:
-            return render_template('register-customer.html', error = 'Please enter a real phone number!')
+            return render_template('register-customer.html', error='Please enter a real phone number!')
 
         elif len(passport_number) >= 30:
-            return render_template('register-customer.html', error = 'Your passport number is too long!')
+            return render_template('register-customer.html', error='Your passport number is too long!')
 
         elif len(passport_country) >= 50:
-            return render_template('register-customer.html', error = 'Your passport country is too long!')
+            return render_template('register-customer.html', error='Your passport country is too long!')
 
         else:
             try:
@@ -105,7 +105,7 @@ def register_agent():
         if mt.root_check_duplicates(table='booking_agent', attribute='email', value=email, user='root'):
             # duplicate
             # TODO
-            return render_template('register-agent.html', error = 'User already exists!')
+            return render_template('register-agent.html', error='User already exists!')
 
         else:
             if len(email) >= 50:
@@ -130,7 +130,7 @@ def register_staff():
     airlines = mt.root_sql_query(user='root', stmt=MySQLTool.STMT_GET_ALL_AIRLINES)
     airlines = [i[0] for i in airlines]
     if request.method == 'GET':
-        return render_template('register-staff.html', airlines= airlines)
+        return render_template('register-staff.html', airlines=airlines)
     else:
         username = request.form.get('username')
         password = request.form.get('password')
@@ -141,31 +141,31 @@ def register_staff():
         permission_code = request.form.get('permission_code')
         if not mt.root_check_exists(user='root', table='airline_staff_permission_code',
                                     attribute='code', value=permission_code):
-            return render_template('register-staff.html', airlines= airlines, error = 'Your permission code do not '
-                                                                                      'exists!')
+            return render_template('register-staff.html', airlines=airlines, error='Your permission code do not '
+                                                                                   'exists!')
         # check duplicate
         if mt.root_check_duplicates(table='airline_staff', attribute='username', value=username, user='root'):
             # duplicate
-            return render_template('register-staff.html', airlines= airlines, error = 'User already exists!')
-        elif len(first_name) >= 50 or len(last_name)>=50:
-            return render_template('register-staff.html', airlines= airlines, error = 'Your name is too long!')
+            return render_template('register-staff.html', airlines=airlines, error='User already exists!')
+        elif len(first_name) >= 50 or len(last_name) >= 50:
+            return render_template('register-staff.html', airlines=airlines, error='Your name is too long!')
         elif airline_name == 'airline' or airline_name == None:
             return render_template('register-staff.html', airlines=airlines, error='Please select airline!')
         else:
             try:
                 lst = dob.split("-")
-                d = datetime.date(day=int(lst[2]),month=int(lst[1]),year=int(lst[0]))
+                d = datetime.date(day=int(lst[2]), month=int(lst[1]), year=int(lst[0]))
             except:
-                return render_template('register-staff.html', airlines= airlines, error = 'Please enter a valid '
-                                                                                          'birthday!')
+                return render_template('register-staff.html', airlines=airlines, error='Please enter a valid '
+                                                                                       'birthday!')
             md5_pass = md5(password.encode('utf-8')).hexdigest()
             new_id = mt.root_new_user_gen_id(user='root')
             if mt.root_insert(user='root', table='airline_staff', value=[username, md5_pass, first_name, last_name, dob,
-                                                                      airline_name, new_id]):
+                                                                         airline_name, new_id]):
                 session['user'] = username + ":A"
             else:
-                return render_template('register-staff.html', airlines= airlines, error = 'Register failed, please '
-                                                                                          'try again later!')
+                return render_template('register-staff.html', airlines=airlines, error='Register failed, please '
+                                                                                       'try again later!')
             return back_home()
 
 
@@ -193,7 +193,7 @@ def login_customer(email, password):
         return back_home()
     else:
         # login unsuccessful
-        return render_template('login.html', error = 'Wrong username or password!')
+        return render_template('login.html', error='Wrong username or password!')
 
 
 def login_agent(email, password):
@@ -205,7 +205,7 @@ def login_agent(email, password):
         return back_home()
     else:
         # login unsuccessful
-        return render_template('login.html', error = 'Wrong username or password!')
+        return render_template('login.html', error='Wrong username or password!')
 
 
 def login_staff(username, password):
@@ -268,6 +268,11 @@ def home_customer(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
 
+    if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
+            == arrival_city == arrival_time == price == status == airplane_id is None:
+        return 'Home page: customer ' + session['user'] + '</br>' + \
+               mt.pretty(utils.get_recommendations(mt, user=user, how_many=10))
+
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
@@ -288,6 +293,11 @@ def home_customer(user):
 def home_agent(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+
+    if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
+            == arrival_city == arrival_time == price == status == airplane_id is None:
+        return 'Home page: booking agent ' + session['user'] + '</br>' + \
+               mt.pretty(utils.get_recommendations(mt, user=user, how_many=10))
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
@@ -406,6 +416,7 @@ def error403(error):
 
 @app.errorhandler(500)
 def error500(error):
+    mt.refresh()
     return back_home()
 
 
