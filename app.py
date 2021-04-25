@@ -438,6 +438,11 @@ def test():
         return ''
 
 
+@app.route('/manual/')
+def manual():
+    return render_template('Databases_Final_Project_Manual.html')
+
+
 if __name__ == '__main__':
 
     if DEBUG:
