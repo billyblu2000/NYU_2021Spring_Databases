@@ -25,12 +25,7 @@ class MySQLTool:
 
     def __init__(self):
 
-        self._conn = mysql.connector.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASS,
-            db=DB_NAME,
-        )
+        self._conn = mysql.connector.connect(**DB_CONFIG)
         refresh_thread = threading.Thread(target=self.__refresh_connection)
         refresh_thread.start()
 
