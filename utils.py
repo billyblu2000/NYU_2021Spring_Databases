@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 import datetime
 import numpy as np
@@ -125,7 +126,7 @@ def get_recommendations(mysqltool, user, how_many):
         b2_stmt = stmt.format(t='booking_agent_id')
         all_user_flights = mysqltool.root_sql_query(user='root', stmt=b2_stmt, value=[agent_id])
     if len(all_user_flights) == 0:
-        return []
+        return get_popular_flights(mysqltool)
     recommended_flights = []
     p = recommendations_params
     weights = np.zeros(shape=(4, 1), dtype=float)
@@ -209,7 +210,6 @@ def get_recommendations(mysqltool, user, how_many):
     raw[:, 3] = normalized(ls, mode='penal_large')
 
     score_list = raw.dot(weights)[:, 0].tolist()
-    print(score_list)
     for i in range(how_many):
         max_index = score_list.index(max(score_list))
         recommended_flights.append(all_flights[max_index])
@@ -249,9 +249,58 @@ def normalized(lst, mode='penal_small'):
     return new_lst
 
 
+def get_popular_flights(mysqltool, how_many=10):
+    stmt = 'SELECT airline_name, flight_num, COUNT(*) FROM purchases NATURAL JOIN ticket ' \
+           'GROUP BY flight_num, airline_name'
+    result_popularity = mysqltool.root_sql_query(stmt=stmt, user='root')
+    result_popularity_dict = {(i[0], i[1]): i[2] for i in result_popularity}
+    result_popularity_dict = sorted(result_popularity_dict.items(), key=lambda x: x[1], reverse=True)
+    result_popularity_dict = {i[0]: i[1] for i in result_popularity_dict}
+    stmt = 'SELECT airline_name, flight_num, COUNT(*) FROM ticket GROUP BY flight_num, airline_name'
+    result_tot_ticket = mysqltool.root_sql_query(stmt=stmt, user='root')
+    result_tot_ticket_dict = {(i[0], i[1]): i[2] for i in result_tot_ticket}
+    rec_flight_num = []
+    count = 0
+    for item in result_popularity_dict.items():
+        if item[1] < result_tot_ticket_dict[item[0]]:
+            rec_flight_num.append(item[0])
+            count += 1
+        if count >= how_many:
+            break
+    rec_flight_num = str(rec_flight_num)
+    rec_flight_num = rec_flight_num[1:-1]
+    rec_flight_num = '(' + rec_flight_num + ')'
+    stmt = 'SELECT * FROM flight WHERE (airline_name, flight_num) IN ' + str(rec_flight_num)
+    result = mysqltool.root_sql_query(stmt=stmt, user='root')
+    return result
+
+
+def flight_list_to_json_list(flight_list):
+    json_list = []
+    for flight in flight_list:
+        json_dict = dict()
+        json_dict['airline_name'] = flight[0]
+        json_dict['flight_num'] = flight[1]
+        json_dict['departure_airport'] = flight[2]
+        json_dict['departure_year'] = flight[3].year
+        json_dict['departure_month'] = flight[3].month
+        json_dict['departure_day'] = flight[3].day
+        json_dict['departure_hour'] = flight[3].hour
+        json_dict['departure_mintue'] = flight[3].minute
+        json_dict['departure_second'] = flight[3].second
+        json_dict['arrival_airport'] = flight[4]
+        json_dict['arrival_year'] = flight[5].year
+        json_dict['arrival_month'] = flight[5].month
+        json_dict['arrival_day'] = flight[5].day
+        json_dict['arrival_hour'] = flight[5].hour
+        json_dict['arrival_mintue'] = flight[5].minute
+        json_dict['arrival_second'] = flight[5].second
+        json_dict['price'] = str(flight[6])
+        json_dict['status'] = flight[7]
+        json_dict['airplane_id'] = str(flight[8])
+        json_list.append(json_dict)
+    return json_list
+
+
 if __name__ == '__main__':
-    d = datetime.datetime(year=2021,month=5,day=1)
-    if d > datetime.datetime.now():
-        print(1)
-    else:
-        print(0)
+    pass

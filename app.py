@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from flask import Flask, session, request, render_template, redirect, Response
 
@@ -253,6 +254,12 @@ def home_guest():
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
 
+    if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
+            == arrival_city == arrival_time == price == status == airplane_id is None:
+        my_json = {'user': 'Guest', 'role': 'None',
+                   'flights': utils.flight_list_to_json_list(utils.get_popular_flights(mysqltool=mt))}
+        return json.dumps(my_json)
+
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
@@ -260,8 +267,9 @@ def home_guest():
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.guest_query(table='flight', attribute=attribute, value=value)
-    return 'Home page: Guest' + '</br>' + mt.pretty(result)
+    my_json = {'user': 'Guest', 'role': 'None',
+               'flights': utils.flight_list_to_json_list(mt.guest_query(table='flight', attribute=attribute, value=value))}
+    return json.dumps(my_json)
 
 
 def home_customer(user):
@@ -270,8 +278,9 @@ def home_customer(user):
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
-        return 'Home page: customer ' + session['user'] + '</br>' + \
-               mt.pretty(utils.get_recommendations(mt, user=user, how_many=10))
+        my_json = {'user': user[:-2], 'role': 'Customer',
+                   'flights': utils.flight_list_to_json_list(utils.get_recommendations(mt, user=user, how_many=10))}
+        return json.dumps(my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
@@ -280,14 +289,16 @@ def home_customer(user):
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    result = mt.customer_query(table='flight', attribute=attribute, value=value)
     if price:
         actual_result = []
         for i in result:
             if price[0] <= i[6] <= price[1]:
                 actual_result.append(i)
         result = actual_result
-    return 'Home page: customer ' + session['user'] + '</br>' + mt.pretty(result)
+    my_json = {'user': user[:-2], 'role': 'Customer',
+               'flights': utils.flight_list_to_json_list(result)}
+    return json.dumps(my_json)
 
 
 def home_agent(user):
@@ -296,8 +307,9 @@ def home_agent(user):
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
-        return 'Home page: booking agent ' + session['user'] + '</br>' + \
-               mt.pretty(utils.get_recommendations(mt, user=user, how_many=10))
+        my_json = {'user': user[:-2], 'role': 'Booking Agent',
+                   'flights': utils.flight_list_to_json_list(utils.get_recommendations(mt, user=user, how_many=10))}
+        return json.dumps(my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
@@ -306,13 +318,24 @@ def home_agent(user):
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.guest_query(table='flight', attribute=attribute, value=value)
-    return 'Home page: booking agent ' + session['user'] + '</br>' + mt.pretty(result)
+    result = mt.agent_query(table='flight', attribute=attribute, value=value)
+    my_json = {'user': user[:-2], 'role': 'Booking Agent',
+               'flights': utils.flight_list_to_json_list(result)}
+    return json.dumps(my_json)
 
 
 def home_staff(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+    
+    if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
+            == arrival_city == arrival_time == price == status == airplane_id is None:
+        result = mt.staff_query(user=user, table='flight NATURAL JOIN airline_staff',
+                                attribute='username', value=user[:-2])
+        result = [i[:9] for i in result]
+        my_json = {'user': user[:-2], 'role': 'Airline Staff',
+                   'flights': utils.flight_list_to_json_list(result)}
+        return json.dumps(my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
@@ -322,7 +345,9 @@ def home_staff(user):
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.guest_query(table='flight', attribute=attribute, value=value)
-    return 'Home page: airline staff ' + session['user'] + '</br>' + mt.pretty(result)
+    my_json = {'user': user[:-2], 'role': 'Airline Staff',
+               'flights': utils.flight_list_to_json_list(result)}
+    return json.dumps(my_json)
 
 
 @app.route('/profile/', methods=['POST', 'GET'])
