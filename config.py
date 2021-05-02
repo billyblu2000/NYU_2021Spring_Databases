@@ -15,11 +15,10 @@ ADMIN = ['billy', 'Billy', 'Ian', 'ian']
 # DATABASE
 DB_REMOTE = True
 if DB_REMOTE:
-    DB_CONFIG = {
-        'host': '49.232.139.17',
-        'user': 'user',
-        'password': None,
-        'db': 'project'}
+    DB_HOST = '49.232.139.17'
+    DB_USER = 'user'
+    DB_PASS = None
+    DB_NAME = 'project'
 else:
     DB_CONFIG = {
         'host': '192.168.64.2',

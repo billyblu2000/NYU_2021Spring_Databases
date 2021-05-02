@@ -18,7 +18,7 @@ mt = MySQLTool()
 
 @app.route('/register/')
 def register():
-    return render_template('home.html')
+    return back_home()
 
 
 @app.route('/register/customer/', methods=['POST', 'GET'])
@@ -256,20 +256,24 @@ def home_guest():
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
-        my_json = {'user': 'Guest', 'role': 'None',
-                   'flights': utils.flight_list_to_json_list(utils.get_popular_flights(mysqltool=mt))}
-        return json.dumps(my_json)
+        flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt,
+                                                                flight_list=utils.get_popular_flights(mysqltool=mt))
+        my_json = {"user": "None", "role": "Guest",
+                   "flights": utils.flight_list_to_json_list(flight_list)}
+        return render_template('home.html', data=my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        return ''
+        my_json = {"user": "None", "role": "Guest", "flights": []}
+        return render_template('home.html', data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    my_json = {'user': 'Guest', 'role': 'None',
-               'flights': utils.flight_list_to_json_list(mt.guest_query(table='flight', attribute=attribute, value=value))}
-    return json.dumps(my_json)
+    flight_list = mt.guest_query(table='flight', attribute=attribute, value=value)
+    flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
+    my_json = {'user': 'Guest', 'role': 'None', 'flights': utils.flight_list_to_json_list(flight_list)}
+    return render_template('home.html', data=my_json)
 
 
 def home_customer(user):
@@ -278,14 +282,16 @@ def home_customer(user):
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
-        my_json = {'user': user[:-2], 'role': 'Customer',
-                   'flights': utils.flight_list_to_json_list(utils.get_recommendations(mt, user=user, how_many=10))}
-        return json.dumps(my_json)
+        flight_list = utils.get_recommendations(mt, user=user, how_many=10)
+        flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
+        my_json = {"user": user[:-2], "role": "Customer", "flights": utils.flight_list_to_json_list(flight_list)}
+        return render_template('home.html',data=my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        return ''
+        my_json = {"user": user[:-2], "role": "Customer", "flights": []}
+        return render_template('home.html',data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
@@ -296,9 +302,9 @@ def home_customer(user):
             if price[0] <= i[6] <= price[1]:
                 actual_result.append(i)
         result = actual_result
-    my_json = {'user': user[:-2], 'role': 'Customer',
-               'flights': utils.flight_list_to_json_list(result)}
-    return json.dumps(my_json)
+    result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
+    my_json = {"user": user[:-2], "role": "Customer", "flights": utils.flight_list_to_json_list(result)}
+    return render_template('home.html',data=my_json)
 
 
 def home_agent(user):
@@ -307,47 +313,50 @@ def home_agent(user):
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
-        my_json = {'user': user[:-2], 'role': 'Booking Agent',
-                   'flights': utils.flight_list_to_json_list(utils.get_recommendations(mt, user=user, how_many=10))}
-        return json.dumps(my_json)
+        flight_list = utils.get_recommendations(mt, user=user, how_many=10)
+        flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
+        my_json = {"user": user[:-2], "role": "Booking Agent", "flights": utils.flight_list_to_json_list(flight_list)}
+        return render_template('home.html',data=my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        return ''
+        my_json = {"user": user[:-2], "role": "Booking Agent", "flights": []}
+        return render_template('home.html',data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.agent_query(table='flight', attribute=attribute, value=value)
-    my_json = {'user': user[:-2], 'role': 'Booking Agent',
-               'flights': utils.flight_list_to_json_list(result)}
-    return json.dumps(my_json)
+    result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
+    my_json = {'user': user[:-2], 'role': 'Booking Agent', 'flights': utils.flight_list_to_json_list(result)}
+    return render_template('home.html',data=my_json)
 
 
 def home_staff(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
-    
+
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
         result = mt.staff_query(user=user, table='flight NATURAL JOIN airline_staff',
                                 attribute='username', value=user[:-2])
         result = [i[:9] for i in result]
-        my_json = {'user': user[:-2], 'role': 'Airline Staff',
-                   'flights': utils.flight_list_to_json_list(result)}
-        return json.dumps(my_json)
+        result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
+        my_json = {'user': user[:-2], 'role': 'Airline Staff', 'flights': utils.flight_list_to_json_list(result)}
+        return render_template('home.html',data=my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        return ''
+        my_json = {"user": user[:-2], "role": "Airline Staff", "flights": []}
+        return render_template('home.html',data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.guest_query(table='flight', attribute=attribute, value=value)
-    my_json = {'user': user[:-2], 'role': 'Airline Staff',
-               'flights': utils.flight_list_to_json_list(result)}
-    return json.dumps(my_json)
+    result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
+    my_json = {'user': user[:-2], 'role': 'Airline Staff', 'flights': utils.flight_list_to_json_list(result)}
+    return render_template('home.html',data=my_json)
 
 
 @app.route('/profile/', methods=['POST', 'GET'])
@@ -451,16 +460,8 @@ def back_home():
 
 @app.route('/test/')
 def test():
-    num = request.args.get('num')
-    if num is None:
-        num = 10
-    else:
-        num = int(num)
-    if 'user' in session.keys():
-        rec = utils.get_recommendations(mt, user=session['user'], how_many=num)
-        return mt.pretty(rec)
-    else:
-        return ''
+    json_str = {"user": "billy", "role": "customer", "flight": [{"flight_num": "00001"}, {"flight_num": "00002"}]}
+    return render_template('test.html', data=json_str)
 
 
 @app.route('/manual/')

@@ -275,29 +275,45 @@ def get_popular_flights(mysqltool, how_many=10):
     return result
 
 
+def flight_list_add_check_ticket_exists(mysqltool, flight_list):
+
+    stmt = 'WITH purchases_join_ticket AS (SELECT * FROM purchases NATURAL JOIN ticket), ' \
+           'count_purchased_ticket AS (SELECT airline_name, flight_num, COUNT(ticket_id) as ct ' \
+           'FROM purchases_join_ticket GROUP BY airline_name, flight_num), ' \
+           'count_total_ticket AS (SELECT airline_name, flight_num, COUNT(ticket_id) as ct ' \
+           'FROM ticket GROUP BY airline_name, flight_num) ' \
+           'SELECT p.airline_name, p.flight_num FROM count_purchased_ticket AS p, count_total_ticket as t ' \
+           'WHERE p.airline_name = t.airline_name AND p.flight_num = t.flight_num ' \
+           'AND p.ct = t.ct'
+    flight_no_ticket = mysqltool.root_sql_query(user='root', stmt=stmt)
+    new_list = []
+    for i in flight_list:
+        if (i[0], i[1]) in flight_no_ticket:
+            new_list.append(list(i) + [0])
+        else:
+            new_list.append(list(i) + [1])
+    return new_list
+
+
 def flight_list_to_json_list(flight_list):
     json_list = []
     for flight in flight_list:
         json_dict = dict()
-        json_dict['airline_name'] = flight[0]
-        json_dict['flight_num'] = flight[1]
-        json_dict['departure_airport'] = flight[2]
-        json_dict['departure_year'] = flight[3].year
-        json_dict['departure_month'] = flight[3].month
-        json_dict['departure_day'] = flight[3].day
-        json_dict['departure_hour'] = flight[3].hour
-        json_dict['departure_mintue'] = flight[3].minute
-        json_dict['departure_second'] = flight[3].second
-        json_dict['arrival_airport'] = flight[4]
-        json_dict['arrival_year'] = flight[5].year
-        json_dict['arrival_month'] = flight[5].month
-        json_dict['arrival_day'] = flight[5].day
-        json_dict['arrival_hour'] = flight[5].hour
-        json_dict['arrival_mintue'] = flight[5].minute
-        json_dict['arrival_second'] = flight[5].second
-        json_dict['price'] = str(flight[6])
-        json_dict['status'] = flight[7]
-        json_dict['airplane_id'] = str(flight[8])
+        json_dict["airline_name"] = flight[0]
+        json_dict["flight_num"] = flight[1]
+        json_dict["departure_airport"] = flight[2]
+        json_dict["departure_date"] = str(flight[3].year) + "-" + str(flight[3].month) + "-" + str(flight[3].day)
+        json_dict["departure_time"] = '{:0>2d}'.format(flight[3].hour) + ":" + '{:0>2d}'.format(flight[3].minute)
+        json_dict["arrival_airport"] = flight[4]
+        json_dict["arrival_date"] = str(flight[5].year) + "-" + str(flight[5].month) + "-" + str(flight[5].day)
+        json_dict["arrival_time"] = '{:0>2d}'.format(flight[5].hour) + ":" + '{:0>2d}'.format(flight[5].minute)
+        json_dict["price"] = str(flight[6])
+        json_dict["status"] = flight[7]
+        json_dict["airplane_id"] = str(flight[8])
+        try:
+            json_dict["ticket"] = str(flight[9])
+        except Exception as e:
+            pass
         json_list.append(json_dict)
     return json_list
 

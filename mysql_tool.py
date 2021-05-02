@@ -25,7 +25,12 @@ class MySQLTool:
 
     def __init__(self):
 
-        self._conn = mysql.connector.connect(**DB_CONFIG)
+        self._conn = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASS,
+            db=DB_NAME
+        )
         refresh_thread = threading.Thread(target=self.__refresh_connection)
         refresh_thread.start()
 
@@ -67,7 +72,8 @@ class MySQLTool:
             else:
                 if airplane_id is None or flight_num is None or ticket_number is None:
                     return False
-            ticket_stmt, ticket_values = self.__staff_insert_ticket(ticket_number, airline_name, flight_num, airplane_id)
+            ticket_stmt, ticket_values = self.__staff_insert_ticket(ticket_number, airline_name, flight_num,
+                                                                    airplane_id)
         if flight_stmt == '' and ticket_stmt == '':
             return False
         try:
@@ -105,7 +111,7 @@ class MySQLTool:
             seats = ticket_number
 
         # get ticket ids
-        existing_ticket_id = self.root_sql_query(user='root',stmt='SELECT ticket_id FROM ticket WHERE flight_num=%s',
+        existing_ticket_id = self.root_sql_query(user='root', stmt='SELECT ticket_id FROM ticket WHERE flight_num=%s',
                                                  value=[flight_num])
         existing_ticket_id = [i[0] for i in existing_ticket_id]
 
@@ -126,16 +132,18 @@ class MySQLTool:
         return sub_stmt, values
 
     @validate_user(role='A')
-    def stuff_update(self, user, table, value):
+    def staff_update(self, user, table, value):
         pass
 
     @validate_user(role='A')
-    def stuff_del(self, user, table, value):
+    def staff_del(self, user, table, value):
         pass
 
     @validate_user(role='A')
-    def stuff_query(self, user, table, value):
-        pass
+    def staff_query(self, user, table, attribute, value):
+        if table not in ['flight NATURAL JOIN airline_staff']:
+            return None
+        return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
 
     # customer can only do query on flight table and purchase table
     @validate_user(role='C')
@@ -151,7 +159,7 @@ class MySQLTool:
             if value[2] is None:
                 stmt = 'INSERT INTO purchases VALUE (%s,%s, NULL, %s)'
                 try:
-                    cursor.execute(stmt, value[:2]+[value[3]])
+                    cursor.execute(stmt, value[:2] + [value[3]])
                 except Exception as e:
                     print(e)
                     self._conn.rollback()
@@ -212,7 +220,7 @@ class MySQLTool:
             return cursor.fetchall()
         else:
             cursor = self._conn.cursor(prepared=True)
-            cursor.execute(stmt,value)
+            cursor.execute(stmt, value)
             return cursor.fetchall()
 
     @validate_user(role='root')
@@ -345,13 +353,13 @@ class MySQLTool:
             str_ += str(i) + '<br/>'
         return str_
 
-    def __refresh_connection(self, thread = True):
+    def __refresh_connection(self, thread=True):
         if thread:
             while True:
                 try:
                     cursor = self._conn.cursor()
                     cursor.close()
-                    print(time.asctime(time.localtime()),"Check DB Connection: Ok")
+                    print(time.asctime(time.localtime()), "Check DB Connection: Ok")
                 except Exception as e:
                     self._conn = mysql.connector.connect(
                         host=DB_HOST,
@@ -359,7 +367,7 @@ class MySQLTool:
                         password=DB_PASS,
                         db=DB_NAME,
                     )
-                    print(time.asctime(time.localtime()),"Check DB Connection: Refreshed")
+                    print(time.asctime(time.localtime()), "Check DB Connection: Refreshed")
                 time.sleep(100)
         else:
             self._conn = mysql.connector.connect(
