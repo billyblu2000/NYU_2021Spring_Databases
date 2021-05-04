@@ -16,6 +16,10 @@ app.config['PERMANENT_SESSION_LIFETIME'] = PERMANENT_SESSION_LIFETIME
 mt = MySQLTool()
 
 
+####################
+# login and register
+####################
+
 @app.route('/register/')
 def register():
     return back_home()
@@ -227,6 +231,10 @@ def log_out():
     return back_home()
 
 
+###########
+# home page
+###########
+
 @app.route('/')
 def home_redirect():
     return back_home()
@@ -253,49 +261,56 @@ def home():
 def home_guest():
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
-
+    airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
         flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt,
                                                                 flight_list=utils.get_popular_flights(mysqltool=mt))
-        my_json = {"user": "None", "role": "Guest",
+        my_json = {"msg": "ok", "user": "None", "role": "Guest",
                    "flights": utils.flight_list_to_json_list(flight_list)}
+        my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
 
     departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"user": "None", "role": "Guest", "flights": []}
+        my_json = {"msg": "ok", "user": "None", "role": "Guest", "flights": []}
+        my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     flight_list = mt.guest_query(table='flight', attribute=attribute, value=value)
     flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
-    my_json = {'user': 'Guest', 'role': 'None', 'flights': utils.flight_list_to_json_list(flight_list)}
+    my_json = {"msg": "ok", 'user': 'Guest', 'role': 'None',
+               'flights': utils.flight_list_to_json_list(flight_list)}
+    my_json.update(airlines_and_cities)
     return render_template('home.html', data=my_json)
 
 
 def home_customer(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
-
+    airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
         flight_list = utils.get_recommendations(mt, user=user, how_many=10)
         flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
-        my_json = {"user": user[:-2], "role": "Customer", "flights": utils.flight_list_to_json_list(flight_list)}
-        return render_template('home.html',data=my_json)
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Customer",
+                   "flights": utils.flight_list_to_json_list(flight_list)}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
-    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
-    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    departure_airport = utils.airport_city_to_airport_name_list(mt, session['user'], departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, session['user'], arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"user": user[:-2], "role": "Customer", "flights": []}
-        return render_template('home.html',data=my_json)
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Customer", "flights": []}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.customer_query(table='flight', attribute=attribute, value=value)
+    result = mt.customer_query(user=session['user'], table='flight', attribute=attribute, value=value)
     if price:
         actual_result = []
         for i in result:
@@ -303,38 +318,47 @@ def home_customer(user):
                 actual_result.append(i)
         result = actual_result
     result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-    my_json = {"user": user[:-2], "role": "Customer", "flights": utils.flight_list_to_json_list(result)}
-    return render_template('home.html',data=my_json)
+    my_json = {"msg": "ok", "user": user[:-2], "role": "Customer",
+               "flights": utils.flight_list_to_json_list(result)}
+    my_json.update(airlines_and_cities)
+    return render_template('home.html', data=my_json)
 
 
 def home_agent(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+    airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
         flight_list = utils.get_recommendations(mt, user=user, how_many=10)
         flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
-        my_json = {"user": user[:-2], "role": "Booking Agent", "flights": utils.flight_list_to_json_list(flight_list)}
-        return render_template('home.html',data=my_json)
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Booking Agent",
+                   "flights": utils.flight_list_to_json_list(flight_list)}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
-    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
-    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    departure_airport = utils.airport_city_to_airport_name_list(mt, session['user'], departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, session['user'], arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"user": user[:-2], "role": "Booking Agent", "flights": []}
-        return render_template('home.html',data=my_json)
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Booking Agent", "flights": []}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.agent_query(table='flight', attribute=attribute, value=value)
+    result = mt.agent_query(user=session['user'], table='flight', attribute=attribute, value=value)
     result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-    my_json = {'user': user[:-2], 'role': 'Booking Agent', 'flights': utils.flight_list_to_json_list(result)}
-    return render_template('home.html',data=my_json)
+    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Booking Agent',
+               'flights': utils.flight_list_to_json_list(result)}
+    my_json.update(airlines_and_cities)
+    return render_template('home.html', data=my_json)
 
 
 def home_staff(user):
     airline, flight_num, departure_airport, departure_city, departure_time, arrival_airport, arrival_city, \
     arrival_time, price, status, airplane_id = utils.retrieve_get_args_for_flight_query(request)
+    airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
 
     if airline == flight_num == departure_airport == departure_city == departure_time == arrival_airport \
             == arrival_city == arrival_time == price == status == airplane_id is None:
@@ -342,63 +366,207 @@ def home_staff(user):
                                 attribute='username', value=user[:-2])
         result = [i[:9] for i in result]
         result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-        my_json = {'user': user[:-2], 'role': 'Airline Staff', 'flights': utils.flight_list_to_json_list(result)}
-        return render_template('home.html',data=my_json)
+        airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
+        my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Airline Staff',
+                   'flights': utils.flight_list_to_json_list(result)}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
-    departure_airport = utils.airport_city_to_airport_name_list(mt, None, departure_city, departure_airport)
-    arrival_airport = utils.airport_city_to_airport_name_list(mt, None, arrival_city, arrival_airport)
+    departure_airport = utils.airport_city_to_airport_name_list(mt, session['user'], departure_city, departure_airport)
+    arrival_airport = utils.airport_city_to_airport_name_list(mt, session['user'], arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"user": user[:-2], "role": "Airline Staff", "flights": []}
-        return render_template('home.html',data=my_json)
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Airline Staff", "flights": []}
+        my_json.update(airlines_and_cities)
+        return render_template('home.html', data=my_json)
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
-    result = mt.guest_query(table='flight', attribute=attribute, value=value)
+    result = mt.staff_query(user=session['user'], table='flight', attribute=attribute, value=value)
     result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-    my_json = {'user': user[:-2], 'role': 'Airline Staff', 'flights': utils.flight_list_to_json_list(result)}
-    return render_template('home.html',data=my_json)
+    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Airline Staff',
+               'flights': utils.flight_list_to_json_list(result)}
+    my_json.update(airlines_and_cities)
+    return render_template('home.html', data=my_json)
 
+
+#######################
+# extra staff functions
+#######################
+
+def staff_insert_flight():
+    pass
+
+
+def staff_update_flight():
+    airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
+    flight_num = request.args.get('flight_num')
+    status = request.args.get('status')
+    if mt.staff_update(user=session['user'], table='flight',
+                       attribute=['status'], value=[status]):
+        return str({'msg': 'ok'})
+    else:
+        return str({'msg': 'failed'})
+
+
+def staff_delete_flight():
+    airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
+    flight_num = request.args.get('flight_num')
+    if mt.staff_del(user=session['user'], table='flight',
+                    attribute=['airline_name', 'flight_num'], value=[airline_name, flight_num]):
+        return str({'msg': 'ok'})
+    else:
+        return str({'msg': 'failed'})
+
+
+def staff_insert_airport():
+    airport_name = request.args.get('airport_name')
+    airport_city = request.args.get('airport_city')
+    if mt.staff_insert(user=session['user'], table='airport', value=[airport_name, airport_city]):
+        return str({'msg': 'ok'})
+    else:
+        return str({'msg': 'failed'})
+
+
+def staff_insert_airplane():
+    airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
+    airplane_id = int(request.args.get('airplane_id'))
+    seats = int(request.args.get('seats'))
+    if mt.staff_insert(user=session['user'], table='airplane', value=[airline_name, airplane_id, seats]):
+        return str({'msg': 'ok'})
+    else:
+        return str({'msg': 'failed'})
+
+
+#################################
+# purchase for customer and agent
+#################################
+
+@app.route('/purchase/')
+def purchase():
+    if 'user' not in session.keys():
+        return render_template('home.html', data=dict(msg="login_required"))
+    if session['user'][-1] == 'C':
+        airline_name = request.args.get('airline_name')
+        flight_num = int(request.args.get('flight_num'))
+        if not airline_name or not flight_num:
+            return render_template('home.html', data=dict(msg="ok"))
+        if _purchase(customer=session['user'][:-2], agent=None, airline_name=airline_name, flight_num=flight_num):
+            print("success")
+            return render_template('home.html', data=dict(msg="success"))
+        else:
+            return render_template('home.html', data=dict(msg="failed"))
+    elif session['user'][-1] == 'B':
+        airline_name = request.args.get('airline_name')
+        flight_num = int(request.args.get('flight_num'))
+        customer_email = request.args.get('customer_email')
+        if not airline_name or not flight_num or not customer_email:
+            return render_template('home.html', data=dict(msg='ok'))
+        if _purchase(customer=customer_email, agent=session['user'][:-2],
+                     airline_name=airline_name, flight_num=flight_num):
+            print(session['user'][:-2])
+            return render_template('home.html', data=dict(msg="success"))
+        else:
+            return render_template('home.html', data=dict(msg="failed"))
+    else:
+        return render_template('home.html', data=dict(msg="user_not_allowed"))
+
+
+def _purchase(customer, agent, airline_name, flight_num):
+    ticket_id = mt.root_get_ticket_id(user='root', airline_name=airline_name, flight_num=flight_num)
+    if not ticket_id:
+        return False
+    if agent is None:
+        date = str(datetime.date.today())
+        if not mt.customer_insert(user=customer + ":C", table='purchases', value=[ticket_id, customer, None, date]):
+            return False
+    else:
+        if not mt.root_check_exists(user='root', table='customer', attribute='email', value=customer):
+            return False
+        date = str(datetime.date.today())
+        agent_id = mt.root_get_agent_id_from_email(user='root', email=agent)
+        if not mt.agent_insert(user=agent + ":B", table="purchases", value=[ticket_id, customer, agent_id, date]):
+            return False
+    return True
+
+
+##############
+# profile page
+##############
 
 @app.route('/profile/', methods=['POST', 'GET'])
-def profile_redirect():
+def profile():
     if 'user' in session.keys():
-        user = session['user']
-        user_name = user[:-2]
-        user_role = user[-1]
-        uid = mt.root_get_uid(user='root', role=user_role, pk=user_name)[0][0]
-        return redirect('/profile/{uid}/'.format(uid=uid))
-
-    else:
-        return back_home()
-
-
-@app.route('/profile/<uid>/', methods=['POST', 'GET'])
-def profile(uid):
-    if 'user' in session.keys():
-        user_name = session['user'][:-2]
-        user_role = session['user'][-1]
-        if user_role == 'A':
-            if mt.root_check_exists(user='root', table='airline_staff',
-                                    attribute=['username', 'uid'], value=[user_name, uid]):
-                return profile_staff(user=session['user'])
-            else:
-                return
-        elif user_role == 'B':
-            if mt.root_check_exists(user='root', table='booking_agent',
-                                    attribute=['email', 'uid'], value=[user_name, uid]):
-                return profile_agent(user=session['user'])
-        elif user_role == 'C':
-            if mt.root_check_exists(user='root', table='customer',
-                                    attribute=['email', 'uid'], value=[user_name, uid]):
-                return profile_customer(user=session['user'])
-        else:
-            return back_home()
+        if session['user'][-1] == 'C':
+            return profile_customer(session['user'])
+        if session['user'][-1] == 'B':
+            return profile_agent(session['user'])
+        if session['user'][-1] == 'A':
+            return profile_staff(session['user'])
     else:
         return back_home()
 
 
 def profile_customer(user):
-    return 'profile of customer: ' + user
+    # get start end time
+    start_year = int(request.args.get('start_year')) if request.args.get('start_year') is not None else None
+    end_year = int(request.args.get('end_year')) if request.args.get('end_year') is not None else None
+    start_month = int(request.args.get('start_month')) if request.args.get('start_month') is not None else None
+    end_month = int(request.args.get('end_month')) if request.args.get('end_month') is not None else None
+    if start_year and end_year and start_month and end_month:
+        start_bar = datetime.date(month=start_month, year=start_year, day=1)
+        start_total = datetime.date(month=start_month, year=start_year, day=1)
+        if end_year == datetime.date.today().year and end_month == datetime.date.today().month:
+            if datetime.date.today().month > 6:
+                end = datetime.date(year=datetime.date.today().year,
+                                    month=datetime.date.today().month, day=datetime.date.today().day)
+            else:
+                end = datetime.date(year=datetime.date.today().year,
+                                    month=datetime.date.today().month, day=datetime.date.today().day)
+        else:
+            if end_month == 12:
+                end = datetime.date(year=end_year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                end = datetime.date(year=end_year, month=end_month + 1, day=1) - timedelta(days=1)
+    elif not start_year and not end_year and not start_month and not end_month:
+        start_total = datetime.date.today() - timedelta(days=365)
+        if datetime.date.today().month > 6:
+            start_bar = datetime.date(year=datetime.date.today().year, month=datetime.date.today().month - 5, day=1)
+            end = datetime.date(year=datetime.date.today().year,
+                                month=datetime.date.today().month, day=datetime.date.today().day)
+        else:
+            start_bar = datetime.date(year=datetime.date.today().year - 1, month=datetime.date.today().month + 7, day=1)
+            end = datetime.date(year=datetime.date.today().year,
+                                month=datetime.date.today().month, day=datetime.date.today().day)
+    else:
+        return str({'msg': 'time_range_incomplete'})
+
+    my_flights = mt.customer_query(user=user, table='flight NATURAL JOIN ticket NATURAL JOIN purchases',
+                                   attribute='customer_email', value=user[:-2])
+    flights_list = utils.flight_list_to_json_list([i[1:10] for i in my_flights])
+    date_price = [(i[12], i[7]) for i in my_flights]
+
+    time_cursor = start_bar
+    spent_dict = {}
+    total = 0
+    while time_cursor <= end:
+        key = str(time_cursor.year) + '-' + str(time_cursor.month)
+        spent_dict[key] = 0
+        if time_cursor.month != 12:
+            time_cursor = datetime.date(year=time_cursor.year, month=time_cursor.month + 1, day=1)
+        else:
+            time_cursor = datetime.date(year=time_cursor.year + 1, month=1, day=1)
+    for i in date_price:
+        date = i[0]
+        price = i[1]
+        if start_bar <= date <= end:
+            total += price
+            key = str(date.year) + '-' + str(date.month)
+            spent_dict[key] += price
+        elif start_total <= date < start_bar:
+            total += price
+    my_json = {'user': user[:-2], 'role': 'Customer', 'msg': 'ok',
+               'flight': flights_list, 'total': total, 'bar': spent_dict}
+    return str(my_json)
 
 
 def profile_agent(user):
@@ -408,6 +576,10 @@ def profile_agent(user):
 def profile_staff(user):
     return 'profile of staff: ' + user
 
+
+#################
+# extra functions
+#################
 
 @app.route('/admin/', methods=['POST', 'GET'])
 def admin():
@@ -419,7 +591,7 @@ def admin():
         if request.form.get('password') not in ADMIN:
             return render_template('admin.html', s='Wrong Password')
         stmt = request.form.get('SQL')
-        print(stmt)
+        utils.log("Admin {a} execute SQL statement: {s}".format(a=request.form.get('password'), s=stmt))
         if request.form.get("optionsRadiosinline") == 'option2':
             mt.root_sql_alter(user='root', stmt=stmt)
             return render_template('admin.html', s='OK')
@@ -427,6 +599,7 @@ def admin():
             try:
                 result = mt.root_sql_query(user='root', stmt=stmt)
             except Exception as e:
+                print(e)
                 return render_template('admin.html', s='Your SQL might be wrong!')
             for i in range(len(result)):
                 result[i] = str(result[i])

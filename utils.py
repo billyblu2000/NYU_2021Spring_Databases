@@ -1,7 +1,10 @@
 import json
+import time
 from functools import wraps
 import datetime
 import numpy as np
+
+from config import SQL_LOG
 
 recommendations_params = {
     'airline': -0.000001,
@@ -23,6 +26,14 @@ useful_sqls = ["-------------------------",
                ]
 
 
+def log(*args):
+    if SQL_LOG:
+        print("APP LOG - - [{t}] - ".format(t=time.asctime(time.localtime())), end=' ')
+        for i in args:
+            print(i, end=' ')
+        print('')
+
+
 # decorator to validate user before method executed
 def validate_user(role="ABC"):
     def decorator(func):
@@ -30,6 +41,8 @@ def validate_user(role="ABC"):
         @wraps(func)
         def decorated(*args, **kwargs):
             user = kwargs['user']
+            if user is not 'root':
+                log("{u} applies to call method '{f}'".format(u=user[:-2], f=func.__name__))
             if user == 'root':
                 return func(*args, **kwargs)
 
@@ -37,14 +50,17 @@ def validate_user(role="ABC"):
             cursor = args[0].get_connection().cursor(prepared=True)
 
             if identity not in role:
-                print("Unauthorized user")
+                log("Unauthorized user, blocked")
                 return None
 
             if identity == 'A':
+                identity = 'Airline Staff'
                 stmt = 'SELECT username FROM airline_staff WHERE username = %s'
             elif identity == 'B':
+                identity = 'Booking Agent'
                 stmt = 'SELECT email FROM booking_agent WHERE email = %s'
             elif identity == 'C':
+                identity = 'Customer'
                 stmt = 'SELECT email FROM customer WHERE email = %s'
             else:
                 raise Exception("Can't understand user when validation")
@@ -53,9 +69,10 @@ def validate_user(role="ABC"):
             result = cursor.fetchall()
 
             if len(result) == 1:
+                log("User validated as {i}, permission granted".format(i=identity))
                 return func(*args, **kwargs)
             else:
-                print("Unknown user, database query and alteration stopped!")
+                log("Unknown user, blocked")
                 return None
 
         return decorated
@@ -86,24 +103,27 @@ def retrieve_get_args_for_flight_query(request):
 
 
 def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, airport_name):
-    if mysqltool_user == 'A':
+    if mysqltool_user is None:
+        query_func = mysqltool.guest_query
+    elif mysqltool_user[-1] == 'A':
         query_func = mysqltool.staff_query
-    elif mysqltool_user == 'B':
+    elif mysqltool_user[-1] == 'B':
         query_func = mysqltool.agent_query
-    elif mysqltool_user == 'C':
+    elif mysqltool_user[-1] == 'C':
         query_func = mysqltool.customer_query
     else:
         query_func = mysqltool.guest_query
     if airport_name:
         if airport_city:
-            check = query_func(table='airport', attribute=['airport_name', 'airport_city'],
+            check = query_func(user=mysqltool_user, able='airport',
+                               attribute=['airport_name', 'airport_city'],
                                value=[airport_name, airport_city])
             if len(check) != 1:
                 return False
         else:
             return airport_name
     if airport_city:
-        airports = query_func(table='airport', attribute='airport_city', value=airport_city)
+        airports = query_func(user=mysqltool_user, table='airport', attribute='airport_city', value=airport_city)
         if len(airports) > 0:
             return [airport[0] for airport in airports]
         else:
@@ -111,9 +131,18 @@ def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, a
     return None
 
 
+def get_all_airlines_and_cities(mysqltool):
+    result = mysqltool.root_sql_query(user='root', stmt=mysqltool.STMT_GET_ALL_AIRLINNS_AND_CITIES)
+    airlines = list(set([i[0] for i in result]))
+    d_cities = list(set([i[1] for i in result]))
+    a_cities = list(set([i[2] for i in result]))
+    result = dict(airlines=airlines, departure_cities=d_cities, arrival_cities=a_cities)
+    return result
+
+
 @validate_user(role='BC')
 def get_recommendations(mysqltool, user, how_many):
-    all_flights = mysqltool.guest_query(table='flight')
+    all_flights = mysqltool.root_sql_query(user='root', stmt=mysqltool.STMT_GET_ALL_FLIGHTS)
     stmt = 'SELECT airline_name, departure_airport, arrival_airport, departure_time, price, purchase_date ' \
            'FROM (purchases INNER JOIN ticket USING (ticket_id)) INNER JOIN flight USING (airline_name, flight_num) ' \
            'WHERE {t} = %s'
@@ -267,6 +296,8 @@ def get_popular_flights(mysqltool, how_many=10):
             count += 1
         if count >= how_many:
             break
+    if len(rec_flight_num) == 0:
+        return []
     rec_flight_num = str(rec_flight_num)
     rec_flight_num = rec_flight_num[1:-1]
     rec_flight_num = '(' + rec_flight_num + ')'
@@ -276,7 +307,6 @@ def get_popular_flights(mysqltool, how_many=10):
 
 
 def flight_list_add_check_ticket_exists(mysqltool, flight_list):
-
     stmt = 'WITH purchases_join_ticket AS (SELECT * FROM purchases NATURAL JOIN ticket), ' \
            'count_purchased_ticket AS (SELECT airline_name, flight_num, COUNT(ticket_id) as ct ' \
            'FROM purchases_join_ticket GROUP BY airline_name, flight_num), ' \
@@ -319,4 +349,4 @@ def flight_list_to_json_list(flight_list):
 
 
 if __name__ == '__main__':
-    pass
+    print(datetime.date.today())

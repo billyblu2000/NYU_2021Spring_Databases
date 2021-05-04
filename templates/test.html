@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{%   for k in data %}
+    {% if k == 'user' %}
+    <h1>
+        {{ data[k] }}
+    </h1>
+    {% elif k == 'role' %}
+    <h2>
+        {{ data[k] }}
+    </h2>
+    {% else %}
+    {% for i in data[k] %}
+        <p>{{ i }}</p>
+    {% endfor %}
+    {% endif %}
+{% endfor %}
+
+</body>
+</html>

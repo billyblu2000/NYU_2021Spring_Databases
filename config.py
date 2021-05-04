@@ -11,17 +11,17 @@ SECRET_KEY = 'secret_key'
 PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
 ROOT_DIR = os.path.abspath(__file__)[:-9]
 ADMIN = ['billy', 'Billy', 'Ian', 'ian']
+SQL_LOG = True
 
 # DATABASE
-DB_REMOTE = True
+DB_REMOTE = False
 if DB_REMOTE:
     DB_HOST = '49.232.139.17'
     DB_USER = 'user'
     DB_PASS = None
     DB_NAME = 'project'
 else:
-    DB_CONFIG = {
-        'host': '192.168.64.2',
-        'user': 'root',
-        'password': '1234',
-        'db': 'project'}
+    DB_HOST = '192.168.64.2'
+    DB_USER = 'root'
+    DB_PASS = '1234'
+    DB_NAME = 'project'
