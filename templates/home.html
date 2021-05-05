@@ -6,18 +6,50 @@
         
     </head>
 <body>
+    <script src=
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
+    </script>
     <section class="banner" id="top">
         <div class="container">
             <div class="row">
-                <div class="col-md-5">
+                <div class="topnav">
+                    <a class="active" href="#home">Home</a>
+                {% if data['role'] == 'Guest' %}                                                
+                    <a href="#flights">Flights</a>
+                {% elif data['role'] == 'Customer' %}
+                    <a href="#flights">Flights</a>
+                    <a href="#spending">Spending</a>
+                    <a href="/logout/">Log Out</a>
+                {% elif data['role'] == 'Agent' %}
+                    <a href="#flights">Flights</a>
+                    <a href="#commission">Commission</a>
+                    <a href="#top_customer">Top Customers</a>
+                    <a href="/logout/">Log Out</a>
+                {% elif data['role'] == 'Staff' %}
+                    <a href="#add">Add</a>
+                    <a href="#frequent_customer">Frequent Customers</a>
+                    <a href="#report">Report</a>
+                    <a href="#earned">Revenue earned</a>
+                    <a href="#top_destination">Top Destination</a>
+                    <a href="/logout/">Log Out</a>
+                {% endif %}
+
+                </div>
+                <div class="col-md-5 col-md-offset-1">
                     <div class="tabs-content">
                         <form class="box">
-                            <h2>Do you have an account?</h2>
+                            {% if data['user'] == 'None' %}
+                                <h2>Do you have an account?</h2>
                                 <a href="/register/staff">Register as Staff</a>
-                                <a href="/register/customer">Register as Customer</a>
-                                <a href="/register/agent">Register as Agent</a>
-                            <h2>Already have one?</h2>
-                                <a href="/login">Login</a>
+                                    <a href="/register/customer">Register as Customer</a>
+                                    <a href="/register/agent">Register as Agent</a>
+                                <h2>Already have one?</h2>
+                                    <a href="/login">Login</a>
+                            {% else %}
+                                <h2>Welcome, {{data['user']}}</h2>
+
+                            {% endif %}
+          
                         </form>
                     </div>
                 </div>
@@ -29,69 +61,58 @@
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="from">From:</label>
-                                        <select required name='from' onchange='this.form.()'>
+                                        <select name='from' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
-                                            <option value="Cambodia">Cambodia</option>
-                                            <option value="Hong Kong">Hong Kong</option>
-                                            <option value="India">India</option>
-                                            <option value="Japan">Japan</option>
-                                            <option value="Korea">Korea</option>
-                                            <option value="Laos">Laos</option>
-                                            <option value="Myanmar">Myanmar</option>
-                                            <option value="Singapore">Singapore</option>
-                                            <option value="Thailand">Thailand</option>
-                                            <option value="Vietnam">Vietnam</option>
+                                            {% for i in data['departure_cities'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %} 
                                         </select>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="to">To:</label>
-                                        <select required name='to' onchange='this.form.()'>
+                                        <select name='to' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
-                                            <option value="Cambodia">Cambodia</option>
-                                            <option value="Hong Kong">Hong Kong</option>
-                                            <option value="India">India</option>
-                                            <option value="Japan">Japan</option>
-                                            <option value="Korea">Korea</option>
-                                            <option value="Laos">Laos</option>
-                                            <option value="Myanmar">Myanmar</option>
-                                            <option value="Singapore">Singapore</option>
-                                            <option value="Thailand">Thailand</option>
-                                            <option value="Vietnam">Vietnam</option>
+                                            {% for i in data['arrival_cities'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %} 
                                         </select>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="departure">Departure date:</label>
-                                        <input name="deparure" type="date" class="form-control date" id="deparure" placeholder="Select date..." required="" onchange='this.form.()'>
+                                        <input name="deparure" type="date" class="form-control date" id="deparure" placeholder="Select date..." onchange='this.form.()'>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="return">Return date:</label>
-                                        <input name="return" type="date" class="form-control date" id="return" placeholder="Select date..." required="" onchange='this.form.()'>
+                                        <input name="return" type="date" class="form-control date" id="return" placeholder="Select date..." onchange='this.form.()'>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="radio-select">
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-6">
-                                                <label for="round">Round</label>
-                                                <input type="radio" name="trip" id="round" value="round" required="required"onchange='this.form.()'>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-6">
-                                                <label for="oneway">Oneway</label>
-                                                <input type="radio" name="trip" id="oneway" value="one-way" required="required"onchange='this.form.()'>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <fieldset>
+                                        <label for="airline">Airline:</label>
+                                        <select name='airline' onchange='this.form.()'>
+                                            <option value="">Select a airline</option>
+                                            {% for i in data['airlines'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %}   
+                                        </select>
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6">
+                                    <fieldset>
+                                        <label for="ticket id">Search by id:</label>
+                                        <input name="search id" type="search" id="search id" placeholder="Order by id" onchange='this.form.()'>
+                                    </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <form class="box">
                                         <fieldset>
-                                            <input type="submit" value = "Order Ticket Now" ></button>
+                                            <input class="order_btn" type="submit" value = "Order Ticket Now" ></button>
                                         </fieldset>
                                     </form>
                                 </div>
@@ -102,13 +123,136 @@
             </div>
         </div>
     </section>
+    
     <div class="tabs-content" id="recommended-flight">
         <div class="container">
             <div class="row">
                 <div class="col-md-12">
-                    <div class="section-heading">
+                    <div class="section-heading" id = "flights">
+                        {% if data['role'] == 'Guest' %}  
                         <h2>Recommended Flights For You</h2>
+                        {% elif data['role'] == 'Customer' %}  
+                        <h2>My Flights</h2>
+                        {% elif data['role'] == 'Staff' %}  
+                        <h2>Frequent Customers</h2>
+                        {% elif data['role'] == 'Agent' %}  
+                        <h2>My Flights</h2>
+                        {% endif %}
                     </div>
+                </div>
+                <div class="col-md-12">
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                        <th>Airline</th>
+                        <th>Flight num</th>
+                        <th>Departure</th>
+                        <th>Dept. Date</th>
+                        <th>Dept. Time</th>
+                        <th>Arrival</th>
+                        <th>Ariv. Date</th>
+                        <th>Ariv. Time</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Airplane Id</th>
+                        <th>Purchase</th>
+                        <th>Edit</th>
+                        {% if data['role'] == 'Staff' %}
+                        <th>Delete</th>
+                        {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody  id="myTable">
+                        
+                    </tbody>
+                    </table>
+                <script>
+                var myArray = {{ data['flights']|safe }};
+                var table = document.getElementById('myTable');
+                function create_table(myArray){
+                    for (var i = 0; i < myArray.length; i++){
+                        var row = `<tr>
+                                        <td>${myArray[i].airline_name}</td>
+                                        <td>${myArray[i].flight_num}</td>
+                                        <td>${myArray[i].departure_airport}</td>
+                                        <td>${myArray[i].departure_date}</td>
+                                        <td>${myArray[i].departure_time}</td>
+                                        <td>${myArray[i].arrival_airport}</td>
+                                        <td>${myArray[i].arrival_date}</td>
+                                        <td>${myArray[i].arrival_time}</td>
+                                        <td>${myArray[i].price}</td>
+                                        <td>${myArray[i].status}</td>
+                                        <td>${myArray[i].airplane_id}</td>
+                                        <td><input id="purchase_btn" type="submit" value = "Purchase" ></button></td>
+                                        <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
+                                        {% if data['role'] == 'Staff' %}
+                                        <td><input id="remove_btn" type="submit" value = "Remove" onclick="remove(`+i+`)"></button></td>
+                                        {% endif %}
+                                </tr>`
+                        table.innerHTML += row
+                    }
+                }
+                create_table(myArray)
+
+                function edit(i) {
+                    table.innerHTML = "";
+                    create_table(myArray.slice(0, i));
+                    var new_row = `<tr>
+                                        <td contenteditable='true'>${myArray[i].airline_name}</td>
+                                        <td contenteditable='true'>${myArray[i].flight_num}</td>
+                                        <td contenteditable='true'>${myArray[i].departure_airport}</td>
+                                        <td contenteditable='true'>${myArray[i].departure_date}</td>
+                                        <td contenteditable='true'>${myArray[i].departure_time}</td>
+                                        <td contenteditable='true'>${myArray[i].arrival_airport}</td>
+                                        <td contenteditable='true'>${myArray[i].arrival_date}</td>
+                                        <td contenteditable='true'>${myArray[i].arrival_time}</td>
+                                        <td contenteditable='true'>${myArray[i].price}</td>
+                                        <td><select name='from' onchange='this.form.()'>
+                                            <option value="${myArray[i].status}">${myArray[i].status}</option>
+                                            <option value="upcoming">upcoming</option>
+                                            <option value="delayed">delayed</option>
+                                            <option value="cancel">cancel</option>
+                                        <td contenteditable='true'>${myArray[i].airplane_id}</td>
+                                        <td><input id="save_btn" type="submit" value = "Save" onclick="save(`+i+`)"></button></td>
+                                        <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
+                                </tr>`
+                    table.innerHTML += new_row;
+                    create_table(myArray.slice(i+1));
+                }
+                function remove(indice) {
+                    myArray.splice(indice, 1);
+                    table.innerHTML = "";
+                    create_table(myArray);
+                }
+                function save(indice) {
+                    table.innerHTML = "";
+                    create_table(myArray);
+                }
+                function cancel(i) {
+                    table.innerHTML = "";
+                    create_table(myArray.slice(0, i));
+                    var row = `<tr>
+                                        <td>${myArray[i].airline_name}</td>
+                                        <td>${myArray[i].flight_num}</td>
+                                        <td>${myArray[i].departure_airport}</td>
+                                        <td>${myArray[i].departure_date}</td>
+                                        <td>${myArray[i].departure_time}</td>
+                                        <td>${myArray[i].arrival_airport}</td>
+                                        <td>${myArray[i].arrival_date}</td>
+                                        <td>${myArray[i].arrival_time}</td>
+                                        <td>${myArray[i].price}</td>
+                                        <td>${myArray[i].status}</td>
+                                        <td>${myArray[i].airplane_id}</td>
+                                        <td><input id="purchase_btn" type="submit" value = "Purchase" ></button></td>
+                                        <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
+                                        {% if data['role'] == 'Staff' %}
+                                        <td><input id="remove_btn" type="submit" value = "Remove" onclick="remove(`+i+`)"></button></td>
+                                        {% endif %}
+                                </tr>`
+                    table.innerHTML += row;
+                    create_table(myArray.slice(i+1));
+                }
+                </script>
                 </div>
             </div>
         </div>
@@ -122,7 +266,34 @@
     }
         body {
             overflow-x: hidden;
-            background-color: #fff;
+            background-color: #e7e7e7;
+        }
+
+        .topnav {
+        background-color: rgba(250, 250, 250, 0.01);
+        overflow: hidden;
+        width: 100%;
+        }
+
+        .topnav a {
+        margin-left:20px;
+        color: rgba(250, 250, 250, 0.5);
+        text-align: center;
+        padding: 14px 16px;
+        display: inline-block;
+        text-decoration: none;
+        font-size: 17px;
+        
+        }
+
+        .topnav a:hover {
+        background-color: #2ecc71;
+        color: white;
+        }
+
+        .topnav a.active {
+        background-color: #2ecc71;
+        color: white;
         }
 
         .section-heading h2 {
@@ -169,9 +340,10 @@
 
         .banner .submit-form {
             text-align: left;
-            margin: 155px 0px;
+            margin: 155px 20px;
             background-color: rgba(250, 250, 250, 0.95);
-            padding: 30px;
+            padding: 20px;
+            padding-bottom: 50px;
         }
 
         .submit-form h4 {
@@ -198,6 +370,7 @@
         }
 
         .submit-form select {
+            margin-top: 20px;
             margin-bottom: 10px;
             width: 100%;
             height: 36px;
@@ -220,37 +393,42 @@
             color: #9a9a9a;
             outline: none;
             padding-left: 15px;
-            margin-left: 0px;
             display: inline-block;
             box-shadow: none;
             border-radius: 0px;
         }
-
         .submit-form input {
-            margin-top: 12px;
             margin-left: 5px;
-            cursor: pointer;
-        }
-
-        .submit-form .radio-select {
-            margin-top: 15px;
-        }
-
-        .submit-form input {
-            
+            margin-bottom: 15px;
             background: none;
             display: block;
-            margin: 40px auto;
-            
+            margin: 20px auto;
             text-align: center;
             border: 2px solid #2ecc71;
-            padding: 14px 40px;
+            padding: 14px 20px;
             outline: none;
             color: black;
             border-radius: 24px;
             transition: 0.25s;
             cursor: pointer;
         }
+        .submit-form input[type = "search"]{
+            margin-left: 5px;
+            width: 100%;
+            height: 36px;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+            border: none;
+            padding: 14px 20px;
+            outline: none;
+            color: black;
+            border-radius: 0px;
+        }
+
         #recommended-flight {
             margin-top: 100px;
             background-color: #f4f4f4;
@@ -285,7 +463,8 @@
             }	
         }
 		.box{
-			width: 300px;
+			margin-top: 30px;
+            width: 300px;
 			padding: 30px;
 			position: absolute;
 			top: 100%;
@@ -332,6 +511,75 @@
 		a:hover{
 			background-color: #2ecc71;
 			}
+        .order_btn{
+			width: 180px;
+			padding: 30px;
+            margin-bottom: 20px;
+            font-size: 70%; 
+			position: absolute;
+			top: 100%;
+			left: 100%;
+			transform: translate(-50%,-100%);
+			background-color: rgba(250, 250, 250, 0.95);
+			text-align: center;
+			}
+        .order_btn:hover{
+			background-color: #2ecc71;
+			}
+        .content-table {
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 0.8em;
+            min-width: 1200px;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            }
+
+        .content-table thead tr {
+            background-color: #009879;
+            color: #ffffff;
+            text-align: left;
+            font-weight: bold;
+            }
+
+        .content-table th,
+        .content-table td {
+            padding: 12px 15px;
+            text-align: center;
+            }
+
+        .content-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+            }
+
+        .content-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+            }
+
+        .content-table tbody tr:last-of-type {
+            border-bottom: 2px solid #009879;
+            }
+
+        .content-table tbody tr.active-row {
+            font-weight: bold;
+            color: #009879;
+            }
+        #myTable input {
+            width: 65px;
+            height: 32px;
+            font-size: 0.8em;
+            border: 2px solid #2ecc71;
+            border-radius: 24px;
+            transition: 0.25s;
+			cursor: pointer;
+			background-color: #f3f3f3;
+			text-align: center;
+        }
+        #myTable input:hover{
+            background-color: #2ecc71;
+        }
 	</style>
 <link rel="stylesheet" type= "text/css" href="{{ url_for('static',filename='css/bootstrap.css') }}">
 <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">

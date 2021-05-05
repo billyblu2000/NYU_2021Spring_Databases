@@ -8,7 +8,7 @@
 				margin: 0;
 				padding: 0;
 				font-family: sans-serif;
-				background: #34495e;
+				background: #fff;
 			}
 			.box{
 				width: 300px;
@@ -17,11 +17,11 @@
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%,-50%);
-				background: #191919;
+				background: #e7e7e7;
 				text-align: center;
 			}
 			.box h1{
-				color: white;
+				color: black;
 				text-transform: uppercase;
 				font-weight: 500;
 				margin: 20px auto;
@@ -36,7 +36,7 @@
 				padding: 14px 10px;
 				width: 200px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: 0.25s;
 			}
@@ -50,7 +50,7 @@
 				padding: 14px 10px;
 				width: 80px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: 0.25s;
 			}
@@ -71,7 +71,7 @@
 				border: 2px solid #2ecc71;
 				padding: 14px 40px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: 0.25s;
 				cursor: pointer;
@@ -81,7 +81,7 @@
 			}
 
 			.box input[type = "button"]{
-				color: white;
+				color: black;
 				font-size: 80%;
 				background: none;
 				display: inline-flex;
@@ -109,7 +109,7 @@
 			
 			a{
 				background: none;
-				color: white;
+				color: black;
 				font-size: 80%;
 				text-decoration: initial;
 				width: 80px;
@@ -172,7 +172,7 @@
 		<input type="password" name = "password" placeholder="Password" required/></br>
 		<input type="name"  name = "first_name" placeholder="First Name" required/>
 		<input type="name"  name = "last_name" placeholder="Last Name" required/>
-		<input type="text" name = "date_of_birth" placeholder="Date of Birth (Year-Month-Day)" required/></br>
+		<input type="text" name = "date_of_birth" placeholder="Date of Birth" onfocus="(this.type='date')" required/></br>
         <label>
             <select id="select" name="airline_name" class="select_gray" required>
                 <option disabled selected hidden value="airline">Airline</option>
@@ -182,12 +182,10 @@
             </select>
         </label>
         <input type="text" name = "permission_code" placeholder="Permission Code" required/></br>
-y
+
     <input type="submit" name="" value = Register />
 	<a href="/register/">Go back</a>
-	{% if error %}
-		<p class="error"><strong>Error:</strong> {{error}}</p>
-	{% endif %}
+
 </form>
 <script>
 var targetoSelect = document.getElementById("select");

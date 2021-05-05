@@ -8,7 +8,7 @@
 				margin: 0;
 				padding: 0;
 				font-family: sans-serif;
-				background: #34495e;
+				background: #fff;
 			}
 			.box{
 				width: 300px;
@@ -17,11 +17,11 @@
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%,-50%);
-				background: #191919;
+				background: #e7e7e7;
 				text-align: center;
 			}
 			.box h1{
-				color: white;
+				color: black;
 				text-transform: uppercase;
 				font-weight: 500;
 				margin: 40px auto;
@@ -36,7 +36,7 @@
 				padding: 14px 10px;
 				width: 200px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: 0.25s;
 			}
@@ -53,7 +53,7 @@
 				border: 2px solid #2ecc71;
 				padding: 14px 40px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: 0.25s;
 				cursor: pointer;
@@ -77,7 +77,7 @@
 				justify-content: center;
 				padding: 14px 40px;
 				outline: none;
-				color: white;
+				color: black;
 				border-radius: 24px;
 				transition: .3s linear;
 				cursor: pointer;
@@ -85,13 +85,11 @@
 			.box input[type = "button"]:hover{
 				background: #2ecc71;
 			}
-			.box input[type = "button"]:focus{
-				background: #2ecc71;
-			}
+
 
 			a{
 				background: none;
-				color: white;
+				color: black;
 				font-size: 80%;
 				text-decoration: initial;
 				width: 80px;
@@ -110,9 +108,6 @@
 			a:hover{
 				background-color: #2ecc71;
 			}
-            .error{
-                color: #c7254e;
-            }
 
 			</style>
 	</head>
@@ -128,9 +123,7 @@
 		
 		<input type="submit" name="" value = Register />
 	<a href="/register/">Go back</a>
-    {% if error %}
-		<p class="error"><strong>Error:</strong> {{error}}</p>
-	{% endif %}
+
 	
 </form>
 
