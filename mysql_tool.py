@@ -155,7 +155,7 @@ class MySQLTool:
         return sub_stmt, values
 
     @validate_user(role='A')
-    def staff_update(self, user, table, value):
+    def staff_update(self, user, table, attribute, value):
         log("Staff {u} updated {t}".format(u=user[:-2], t=table))
         pass
 

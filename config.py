@@ -14,7 +14,7 @@ ADMIN = ['billy', 'Billy', 'Ian', 'ian']
 SQL_LOG = True
 
 # DATABASE
-DB_REMOTE = False
+DB_REMOTE = True
 if DB_REMOTE:
     DB_HOST = '49.232.139.17'
     DB_USER = 'user'
