@@ -1,3 +1,8 @@
+"""
+util functions that mostly called by functions in app.py
+a few will be called by MySQLTool
+"""
+
 import json
 import time
 from functools import wraps
@@ -6,12 +11,14 @@ import numpy as np
 
 from config import SQL_LOG
 
+# parameters used in get_recommendations()
 recommendations_params = {
     'airline': -0.000001,
     'city_weight': 0.6,
     'airport_weight': 0.4,
 }
 
+# string used in admin page
 useful_sqls = ["-------------------------",
                "Useful SQLs",
                "-------------------------",
@@ -26,6 +33,7 @@ useful_sqls = ["-------------------------",
                ]
 
 
+# APP log, can switch off in config.py by setting SQL_LOG = False
 def log(*args):
     if SQL_LOG:
         print("APP LOG - - [{t}] - ".format(t=time.asctime(time.localtime())), end=' ')
@@ -80,6 +88,11 @@ def validate_user(role="ABC"):
     return decorator
 
 
+###############################
+# some functions to retrieve
+# the GET arguments in requests
+###############################
+
 def retrieve_get_args_for_flight_query(request):
     departure_city = request.args.get('departure_city')
     departure_airport = request.args.get('departure_airport')
@@ -102,6 +115,193 @@ def retrieve_get_args_for_flight_query(request):
             arrival_airport, arrival_city, arrival_time, price, status, airplane_id)
 
 
+def retrieve_get_args_for_customer_date_spent(request):
+    start_year = int(request.args.get('start_year')) if request.args.get('start_year') is not None else None
+    end_year = int(request.args.get('end_year')) if request.args.get('end_year') is not None else None
+    start_month = int(request.args.get('start_month')) if request.args.get('start_month') is not None else None
+    end_month = int(request.args.get('end_month')) if request.args.get('end_month') is not None else None
+    if start_year and end_year and start_month and end_month:
+        start_bar = datetime.date(month=start_month, year=start_year, day=1)
+        start_total = datetime.date(month=start_month, year=start_year, day=1)
+        if end_year == datetime.date.today().year and end_month == datetime.date.today().month:
+            if datetime.date.today().month > 6:
+                end = datetime.date(year=datetime.date.today().year,
+                                    month=datetime.date.today().month, day=datetime.date.today().day)
+            else:
+                end = datetime.date(year=datetime.date.today().year,
+                                    month=datetime.date.today().month, day=datetime.date.today().day)
+        else:
+            if end_month == 12:
+                end = datetime.date(year=end_year + 1, month=1, day=1) - datetime.timedelta(days=1)
+            else:
+                end = datetime.date(year=end_year, month=end_month + 1, day=1) - datetime.timedelta(days=1)
+    elif not start_year and not end_year and not start_month and not end_month:
+        start_total = datetime.date.today() - datetime.timedelta(days=365)
+        if datetime.date.today().month > 6:
+            start_bar = datetime.date(year=datetime.date.today().year, month=datetime.date.today().month - 5, day=1)
+            end = datetime.date(year=datetime.date.today().year,
+                                month=datetime.date.today().month, day=datetime.date.today().day)
+        else:
+            start_bar = datetime.date(year=datetime.date.today().year - 1, month=datetime.date.today().month + 7, day=1)
+            end = datetime.date(year=datetime.date.today().year,
+                                month=datetime.date.today().month, day=datetime.date.today().day)
+    else:
+        return False, False, False
+    return start_total, start_bar, end
+
+
+def retrieve_get_args_for_agent_date_commission(request):
+    start_year = int(request.args.get('start_year')) if request.args.get('start_year') is not None else None
+    end_year = int(request.args.get('end_year')) if request.args.get('end_year') is not None else None
+    start_month = int(request.args.get('start_month')) if request.args.get('start_month') is not None else None
+    end_month = int(request.args.get('end_month')) if request.args.get('end_month') is not None else None
+    start_date = int(request.args.get('start_date')) if request.args.get('start_date') is not None else None
+    end_date = int(request.args.get('end_date')) if request.args.get('end_date') is not None else None
+    if start_year and end_year and start_month and end_month and start_date and end_date:
+        start = datetime.date(year=start_year, month=start_month, day=start_date)
+        end = datetime.date(year=end_year, month=end_month, day=end_date)
+    else:
+        start = datetime.date.today() - datetime.timedelta(days=30)
+        end = datetime.date.today()
+    return start, end
+
+
+def retrieve_get_args_for_staff_date_report(request):
+    start_year = int(request.args.get('start_year')) if request.args.get('start_year') is not None else None
+    end_year = int(request.args.get('end_year')) if request.args.get('end_year') is not None else None
+    start_month = int(request.args.get('start_month')) if request.args.get('start_month') is not None else None
+    end_month = int(request.args.get('end_month')) if request.args.get('end_month') is not None else None
+    start_date = int(request.args.get('start_date')) if request.args.get('start_date') is not None else None
+    end_date = int(request.args.get('end_date')) if request.args.get('end_date') is not None else None
+    if start_year and end_year and start_month and end_month and start_date and end_date:
+        start = datetime.date(year=start_year, month=start_month, day=start_date)
+        end = datetime.date(year=end_year, month=end_month, day=end_date)
+    else:
+        start = datetime.date.today() - datetime.timedelta(days=183)
+        end = datetime.date.today()
+    return start, end
+
+
+def staff_functions(mysqltool, mysqltool_user, request, action):
+    if action == 'all_booking_agents':
+        result = mysqltool.staff_query(user=mysqltool_user,
+                                       table='flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN '
+                                             'booking_agent')
+        price_email_date = [(i[8], i[13], i[12]) for i in result]
+        one_month_before = datetime.date.today() - datetime.timedelta(days=30)
+        one_year_before = datetime.date.today() - datetime.timedelta(days=365)
+        top_ticket_last_month, top_ticket_last_year, top_commission_last_year = {}, {}, {}
+        for i in price_email_date:
+            if i[2] > one_month_before:
+                if i[1] not in top_ticket_last_month.keys():
+                    top_ticket_last_month[i[1]] = 1
+                else:
+                    top_ticket_last_month[i[1]] += 1
+                if i[1] not in top_ticket_last_year.keys():
+                    top_ticket_last_year[i[1]] = 1
+                else:
+                    top_ticket_last_year[i[1]] += 1
+                if i[1] not in top_commission_last_year.keys():
+                    top_commission_last_year[i[1]] = i[0]
+                else:
+                    top_commission_last_year[i[1]] += i[0]
+            elif i[2] > one_year_before:
+                if i[1] not in top_ticket_last_year.keys():
+                    top_ticket_last_year[i[1]] = 1
+                else:
+                    top_ticket_last_year[i[1]] += 1
+                if i[1] not in top_commission_last_year.keys():
+                    top_commission_last_year[i[1]] = i[0]
+                else:
+                    top_commission_last_year[i[1]] += i[0]
+        top_ticket_last_month = sort_dictionary(top_ticket_last_month, limit=5)
+        top_commission_last_year = sort_dictionary(top_commission_last_year, limit=5)
+        top_ticket_last_year = sort_dictionary(top_ticket_last_year, limit=5)
+        return list(top_ticket_last_month.keys()), \
+               list(top_ticket_last_year.keys()), \
+               list(top_commission_last_year.keys())
+
+    elif action == 'frequent_customers':
+        one_year_before = datetime.date.today() - datetime.timedelta(days=365)
+        stmt = 'WITH customer_count AS (SELECT customer_email, COUNT(customer_email) AS cc ' \
+               'FROM flight NATURAL JOIN ticket NATURAL JOIN purchases WHERE purchase_date >= %s GROUP BY customer_email) ' \
+               'SELECT customer_email FROM customer_count WHERE customer_count.cc = (' \
+               'SELECT MAX(cc) FROM customer_count)'
+
+        frequent_customer = mysqltool.root_sql_query(user='root', stmt=stmt, value=[str(one_year_before)])[0][0]
+
+        if request.args.get('customer_email'):
+            customer_email = request.args.get('customer_email')
+        else:
+            customer_email = frequent_customer
+
+        result = mysqltool.staff_query(user=mysqltool_user,
+                                       table='flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN '
+                                             'airline_staff',
+                                       attribute=['customer_email', 'username'],
+                                       value=[customer_email, mysqltool_user[:-2]])
+        result = [[i[0]] + list(i[2:10]) for i in result]
+        return frequent_customer, result
+
+    elif action == 'report':
+        start, end = retrieve_get_args_for_staff_date_report(request)
+        str_start = str(start)
+        str_end = str(end)
+        stmt = 'SELECT * FROM flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN airline_staff ' \
+               'WHERE purchase_date BETWEEN %s AND %s AND username=%s'
+        result = mysqltool.staff_query(user=mysqltool_user, table=None,
+                                       usestmt=True, s=stmt, v=[str_start, str_end, mysqltool_user[:-2]])
+        date = [i[12] for i in result]
+        bar_dict = {}
+        cursor = start
+        while cursor <= end:
+            key = str(cursor.year) + '-' + str(cursor.month)
+            bar_dict[key] = 0
+            if cursor.month != 12:
+                cursor = datetime.date(year=cursor.year, month=cursor.month + 1, day=1)
+            else:
+                cursor = datetime.date(year=cursor.year + 1, month=1, day=1)
+        for i in date:
+            key = str(i.year) + '-' + str(i.month)
+            bar_dict[key] += 1
+        return len(date), bar_dict
+
+    elif action == 'revenue':
+        last_month = str(datetime.date.today() - datetime.timedelta(days=90))
+        last_year = str(datetime.date.today() - datetime.timedelta(days=90))
+        stmt = 'WITH count_null_month AS (SELECT SUM(price) AS cnm FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
+               'WHERE booking_agent_id IS NULL AND purchase_date > %s), ' \
+               'count_null_year AS (SELECT SUM(price) AS cny FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
+               'WHERE booking_agent_id IS NULL AND purchase_date > %s), ' \
+               'count_not_null_month AS (SELECT SUM(price) AS cnnm FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
+               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s), ' \
+               'count_not_null_year AS (SELECT SUM(price) AS cnny FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
+               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s) ' \
+               'SELECT cnm, cny, cnnm, cnny ' \
+               'FROM count_null_month, count_null_year, count_not_null_month, count_not_null_year'
+        result = mysqltool.staff_query(user=mysqltool_user, table=None,
+                                       usestmt=True, s=stmt, v=[last_month, last_year, last_month, last_year])
+        result = list(result[0])
+        return result
+    elif action == 'destinations':
+        stmt = 'SELECT airport_city, COUNT(airport_city) AS cac ' \
+               'FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
+               'INNER JOIN airport ON (arrival_airport = airport.airport_name) ' \
+               'WHERE purchase_date > %s GROUP BY airport_city ORDER BY cac DESC LIMIT 3'
+        three_month_before = datetime.date.today() - datetime.timedelta(days=90)
+        one_year_before = datetime.date.today() - datetime.timedelta(days=365)
+        month_result = mysqltool.staff_query(user=mysqltool_user, table=None,
+                                             usestmt=True, s=stmt, v=[str(three_month_before)])
+        month_result = [i[0] for i in month_result]
+        year_result = mysqltool.staff_query(user=mysqltool_user, table=None,
+                                            usestmt=True, s=stmt, v=[str(one_year_before)])
+        year_result = [i[0] for i in year_result]
+        return month_result, year_result
+    else:
+        return None
+
+
+# return all airports in specific city
 def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, airport_name):
     if mysqltool_user is None:
         query_func = mysqltool.guest_query
@@ -131,6 +331,7 @@ def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, a
     return None
 
 
+# return all airlines and cities
 def get_all_airlines_and_cities(mysqltool):
     result = mysqltool.root_sql_query(user='root', stmt=mysqltool.STMT_GET_ALL_AIRLINNS_AND_CITIES)
     airlines = list(set([i[0] for i in result]))
@@ -140,6 +341,8 @@ def get_all_airlines_and_cities(mysqltool):
     return result
 
 
+# get recommendations for booking agents and customers
+# staff can't call this func
 @validate_user(role='BC')
 def get_recommendations(mysqltool, user, how_many):
     all_flights = mysqltool.root_sql_query(user='root', stmt=mysqltool.STMT_GET_ALL_FLIGHTS)
@@ -247,6 +450,7 @@ def get_recommendations(mysqltool, user, how_many):
     return recommended_flights
 
 
+# called by get_recommendations()
 def match_airport_and_city(airports, cities, user_p_airport_dict, user_p_city_dict):
     score = 0
     w_c = recommendations_params['city_weight']
@@ -263,6 +467,7 @@ def match_airport_and_city(airports, cities, user_p_airport_dict, user_p_city_di
     return score
 
 
+# called by get_recommendations()
 def normalized(lst, mode='penal_small'):
     lst_min = min(lst)
     lst_max = max(lst)
@@ -278,6 +483,8 @@ def normalized(lst, mode='penal_small'):
     return new_lst
 
 
+# get popular flights for guests
+# flight that sold out will not be returned
 def get_popular_flights(mysqltool, how_many=10):
     stmt = 'SELECT airline_name, flight_num, COUNT(*) FROM purchases NATURAL JOIN ticket ' \
            'GROUP BY flight_num, airline_name'
@@ -306,6 +513,8 @@ def get_popular_flights(mysqltool, how_many=10):
     return result
 
 
+# add an additional attribute to flight
+# to indicate whether the flight is sold out or not
 def flight_list_add_check_ticket_exists(mysqltool, flight_list):
     stmt = 'WITH purchases_join_ticket AS (SELECT * FROM purchases NATURAL JOIN ticket), ' \
            'count_purchased_ticket AS (SELECT airline_name, flight_num, COUNT(ticket_id) as ct ' \
@@ -325,6 +534,7 @@ def flight_list_add_check_ticket_exists(mysqltool, flight_list):
     return new_list
 
 
+# convert flight list to json
 def flight_list_to_json_list(flight_list):
     json_list = []
     for flight in flight_list:
@@ -346,6 +556,14 @@ def flight_list_to_json_list(flight_list):
             pass
         json_list.append(json_dict)
     return json_list
+
+
+def sort_dictionary(dictionary, limit):
+    sorted_items = sorted(dictionary.items(), key=lambda x: x[1], reverse=True)
+    if len(sorted_items) >= limit:
+        sorted_items = sorted_items[:limit]
+    new_dict = {i[0]: i[1] for i in sorted_items}
+    return new_dict
 
 
 if __name__ == '__main__':

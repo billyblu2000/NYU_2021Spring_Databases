@@ -1,3 +1,7 @@
+"""
+MySQLTool class to deal with DB
+"""
+
 import random
 import threading
 import time
@@ -14,11 +18,14 @@ class MySQLTool:
 
     # stored SQL queries and constants
     STMT_GET_ALL_AIRLINES = 'SELECT airline_name FROM airline'
+    STMT_GET_ALL_AIRPORTS = 'SELECT airport_name FROM airport'
+    STMT_GET_ALL_AIRPLANES_FOR_AIRLINE = 'SELECT airplane_id, seats FROM airplane ' \
+                                         'NATURAL JOIN airline NATURAL JOIN airline_staff WHERE username = %s'
     STMT_GET_ALL_FLIGHTS = 'SELECT * FROM flight'
     STMT_GET_ALL_AIRLINNS_AND_CITIES = 'SELECT airline_name, s.airport_city, t.airport_city ' \
-                                         'FROM (flight INNER JOIN airport s ' \
-                                         'ON flight.departure_airport = s.airport_name) ' \
-                                         'INNER JOIN airport t ON flight.arrival_airport = t.airport_name'
+                                       'FROM (flight INNER JOIN airport s ' \
+                                       'ON flight.departure_airport = s.airport_name) ' \
+                                       'INNER JOIN airport t ON flight.arrival_airport = t.airport_name'
     A = 'airline_staff'
     B = 'booking_agent'
     C = 'customer'
@@ -97,7 +104,7 @@ class MySQLTool:
             stmt = 'INSERT INTO airport VALUE (%S,%S)'
             cursor = self._conn.cursor(prepared=True)
             try:
-                cursor.execute(stmt,value=value)
+                cursor.execute(stmt, value=value)
             except:
                 self._conn.rollback()
                 return False
@@ -110,7 +117,7 @@ class MySQLTool:
                 self._conn.rollback()
                 return False
         self._conn.commit()
-        log("Staff {u} inserted to {t}".format(u=user[:-2],t=table))
+        log("Staff {u} inserted to {t}".format(u=user[:-2], t=table))
         return True
 
     @staticmethod
@@ -134,8 +141,7 @@ class MySQLTool:
             seats = ticket_number
 
         # get ticket ids
-        existing_ticket_id = self.root_sql_query(user='root', stmt='SELECT ticket_id FROM ticket WHERE flight_num=%s',
-                                                 value=[flight_num])
+        existing_ticket_id = self.root_sql_query(user='root', stmt='SELECT ticket_id FROM ticket')
         existing_ticket_id = [i[0] for i in existing_ticket_id]
 
         # create tickets with random ids
@@ -144,9 +150,9 @@ class MySQLTool:
         sub_stmt = 'INSERT INTO ticket VALUES '
         values = []
         for i in range(seats):
-            id = random.randint(10000, 99999)
+            id = random.randint(10000000, 99999999)
             while id in existing_ticket_id:
-                id = random.randint(10000, 99999)
+                id = random.randint(10000000, 99999999)
             existing_ticket_id.append(id)
             sub_stmt += '(%s,%s,%s),'
             values += [id, airline_name, flight_num]
@@ -155,19 +161,31 @@ class MySQLTool:
         return sub_stmt, values
 
     @validate_user(role='A')
-    def staff_update(self, user, table, attribute, value):
+    def staff_update(self, user, table, pk, attribute, value):
+        if table not in ['flight']:
+            return None
         log("Staff {u} updated {t}".format(u=user[:-2], t=table))
-        pass
+        stmt = 'UPDATE flight SET '+ self.__create_stmt_attr_value(attribute, value) + ' ' \
+               + 'WHERE airline_name = %s AND flight_num = %s'
+        cursor = self._conn.cursor(prepared=True)
+        try:
+            cursor.execute(stmt, value + pk)
+        except Exception as e:
+            self._conn.rollback()
+            return False
+        self._conn.commit()
+        log("Staff {u} updated {t}".format(u=user[:-2], t=table))
+        return True
 
     @validate_user(role='A')
     def staff_del(self, user, table, attribute, value):
         if table not in ['flight']:
             return None
 
-        stmt = 'DELETE FROM flight WHERE ' + self.__create_stmt_attr_value(attribute=attribute,value=value)
+        stmt = 'DELETE FROM flight WHERE ' + self.__create_stmt_attr_value(attribute=attribute, value=value)
         cursor = self._conn.cursor(prepared=True)
         try:
-            cursor.execute(stmt,value=value)
+            cursor.execute(stmt, value)
         except:
             self._conn.rollback()
             return False
@@ -176,8 +194,15 @@ class MySQLTool:
         return True
 
     @validate_user(role='A')
-    def staff_query(self, user, table, attribute, value):
-        if table not in ['flight NATURAL JOIN airline_staff', 'flight', 'airport']:
+    def staff_query(self, user, table, attribute=None, value=None, usestmt=False, s=None, v=None):
+        if usestmt:
+            return self.root_sql_query(user='root', stmt=s, value=v)
+        if table not in ['flight NATURAL JOIN airline_staff', 'flight', 'airport',
+                         'flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN booking_agent',
+                         'flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN airline_staff',
+                         'flight NATURAL JOIN ticket NATURAL JOIN purchases',
+                         'flight NATURAL JOIN ticket NATURAL JOIN purchases '
+                         'INNER JOIN airport ON (arrival_airport = airport.airport_name)']:
             return None
         log("Staff {u} searched on {t}".format(u=user[:-2], t=table))
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
@@ -218,7 +243,7 @@ class MySQLTool:
     # agent can only do query on flight table and purchase table
     @validate_user(role='B')
     def agent_query(self, user, table, attribute, value):
-        if table not in ['flight', 'purchase', 'airport']:
+        if table not in ['flight', 'purchase', 'airport', 'flight NATURAL JOIN ticket NATURAL JOIN purchases']:
             return None
         log("Agent {u} searched on {t}".format(u=user[:-2], t=table))
         return self.__query_with_table_and_where(table=table, attribute=attribute, value=value)
@@ -353,7 +378,7 @@ class MySQLTool:
     def root_get_staff_airline(self, user, staff):
         cursor = self._conn.cursor(prepared=True)
         result = self.root_sql_query(user=user, stmt='SELECT airline_name FROM airline_staff WHERE username=%s',
-                            value=[staff])[0][0]
+                                     value=[staff])[0][0]
         return result
 
     def root_get_ticket_id(self, user, airline_name, flight_num):
@@ -460,5 +485,3 @@ class MySQLTool:
 
     def refresh(self):
         self.__refresh_connection(thread=False)
-
-

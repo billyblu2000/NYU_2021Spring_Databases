@@ -1,3 +1,8 @@
+"""
+project main functions;
+run this file to start the app
+"""
+
 import datetime
 import json
 
@@ -225,7 +230,7 @@ def login_staff(username, password):
         return render_template('login.html', error='Wrong username or password!')
 
 
-@app.route('/logout', methods=['POST', 'GET'])
+@app.route('/logout/', methods=['POST', 'GET'])
 def log_out():
     session.clear()
     return back_home()
@@ -333,7 +338,7 @@ def home_agent(user):
             == arrival_city == arrival_time == price == status == airplane_id is None:
         flight_list = utils.get_recommendations(mt, user=user, how_many=10)
         flight_list = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=flight_list)
-        my_json = {"msg": "ok", "user": user[:-2], "role": "Booking Agent",
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Agent",
                    "flights": utils.flight_list_to_json_list(flight_list)}
         my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
@@ -341,7 +346,7 @@ def home_agent(user):
     departure_airport = utils.airport_city_to_airport_name_list(mt, session['user'], departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, session['user'], arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"msg": "ok", "user": user[:-2], "role": "Booking Agent", "flights": []}
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Agent", "flights": []}
         my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
 
@@ -349,7 +354,7 @@ def home_agent(user):
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.agent_query(user=session['user'], table='flight', attribute=attribute, value=value)
     result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Booking Agent',
+    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Agent',
                'flights': utils.flight_list_to_json_list(result)}
     my_json.update(airlines_and_cities)
     return render_template('home.html', data=my_json)
@@ -367,7 +372,7 @@ def home_staff(user):
         result = [i[:9] for i in result]
         result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
         airlines_and_cities = utils.get_all_airlines_and_cities(mysqltool=mt)
-        my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Airline Staff',
+        my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Staff',
                    'flights': utils.flight_list_to_json_list(result)}
         my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
@@ -375,7 +380,7 @@ def home_staff(user):
     departure_airport = utils.airport_city_to_airport_name_list(mt, session['user'], departure_city, departure_airport)
     arrival_airport = utils.airport_city_to_airport_name_list(mt, session['user'], arrival_city, arrival_airport)
     if departure_airport == False or arrival_airport == False:
-        my_json = {"msg": "ok", "user": user[:-2], "role": "Airline Staff", "flights": []}
+        my_json = {"msg": "ok", "user": user[:-2], "role": "Staff", "flights": []}
         my_json.update(airlines_and_cities)
         return render_template('home.html', data=my_json)
 
@@ -383,7 +388,7 @@ def home_staff(user):
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
     result = mt.staff_query(user=session['user'], table='flight', attribute=attribute, value=value)
     result = utils.flight_list_add_check_ticket_exists(mysqltool=mt, flight_list=result)
-    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Airline Staff',
+    my_json = {"msg": "ok", 'user': user[:-2], 'role': 'Staff',
                'flights': utils.flight_list_to_json_list(result)}
     my_json.update(airlines_and_cities)
     return render_template('home.html', data=my_json)
@@ -394,21 +399,64 @@ def home_staff(user):
 #######################
 
 def staff_insert_flight():
-    pass
+    if session['user'][-1] != 'A':
+        return back_home()
+    if request.method == 'GET':
+        airplanes = mt.root_sql_query(user='root', stmt=mt.STMT_GET_ALL_AIRPLANES_FOR_AIRLINE,
+                                      value=[session['user'][:-2]])
+        airplanes = [i[0] for i in airplanes]
+        airports = mt.root_sql_query(user='root', stmt=mt.STMT_GET_ALL_AIRPORTS)
+        airports = [i[0] for i in airports]
+        return 'waiting to complete'
+    else:
+        flight_num = request.form.get('flight_num')
+        departure_time = request.form.get('departure_time')
+        arrival_time = request.form.get('arrival_timeht_num')
+        departure_airport = request.form.get('departure_airport')
+        arrival_airport = request.form.get('arrival_airport')
+        price = request.form.get('price')
+        status = request.form.get('status')
+        airplane_id = request.form.get('airplane_id')
+
+        try:
+            flight_num = int(flight_num)
+            price = int(price)
+            airplane_id = int(airplane_id)
+        except:
+            return str({'msg': 'invalid data'})
+
+        try:
+            ticket_number = int(request.form.get('ticket_number'))
+        except:
+            ticket_number = None
+
+        airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
+        if mt.staff_insert(user=session['user'], table='flight', ticket_number=ticket_number,
+                           value=[airline_name, flight_num, departure_airport, departure_time,
+                                  arrival_airport, arrival_time, price, status, airplane_id]):
+            return str({'msg': 'ok'})
+        else:
+            return str({'msg': 'failed'})
 
 
+@app.route('/home/update/')
 def staff_update_flight():
+    if session['user'][-1] != 'A':
+        return back_home()
     airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
-    flight_num = request.args.get('flight_num')
+    flight_num = int(request.args.get('flight_num'))
     status = request.args.get('status')
-    if mt.staff_update(user=session['user'], table='flight',
+    if mt.staff_update(user=session['user'], table='flight', pk=[airline_name, flight_num],
                        attribute=['status'], value=[status]):
         return str({'msg': 'ok'})
     else:
         return str({'msg': 'failed'})
 
 
+# not recommended
 def staff_delete_flight():
+    if session['user'][-1] != 'A':
+        return back_home()
     airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
     flight_num = request.args.get('flight_num')
     if mt.staff_del(user=session['user'], table='flight',
@@ -419,22 +467,32 @@ def staff_delete_flight():
 
 
 def staff_insert_airport():
-    airport_name = request.args.get('airport_name')
-    airport_city = request.args.get('airport_city')
-    if mt.staff_insert(user=session['user'], table='airport', value=[airport_name, airport_city]):
-        return str({'msg': 'ok'})
+    if session['user'][-1] != 'A':
+        return back_home()
+    if request.method == 'GET':
+        pass
     else:
-        return str({'msg': 'failed'})
+        airport_name = request.args.get('airport_name')
+        airport_city = request.args.get('airport_city')
+        if mt.staff_insert(user=session['user'], table='airport', value=[airport_name, airport_city]):
+            return str({'msg': 'ok'})
+        else:
+            return str({'msg': 'failed'})
 
 
 def staff_insert_airplane():
-    airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
-    airplane_id = int(request.args.get('airplane_id'))
-    seats = int(request.args.get('seats'))
-    if mt.staff_insert(user=session['user'], table='airplane', value=[airline_name, airplane_id, seats]):
-        return str({'msg': 'ok'})
+    if session['user'][-1] != 'A':
+        return back_home()
+    if request.method == 'GET':
+        pass
     else:
-        return str({'msg': 'failed'})
+        airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
+        airplane_id = int(request.args.get('airplane_id'))
+        seats = int(request.args.get('seats'))
+        if mt.staff_insert(user=session['user'], table='airplane', value=[airline_name, airplane_id, seats]):
+            return str({'msg': 'ok'})
+        else:
+            return str({'msg': 'failed'})
 
 
 #################################
@@ -508,42 +566,16 @@ def profile():
 
 def profile_customer(user):
     # get start end time
-    start_year = int(request.args.get('start_year')) if request.args.get('start_year') is not None else None
-    end_year = int(request.args.get('end_year')) if request.args.get('end_year') is not None else None
-    start_month = int(request.args.get('start_month')) if request.args.get('start_month') is not None else None
-    end_month = int(request.args.get('end_month')) if request.args.get('end_month') is not None else None
-    if start_year and end_year and start_month and end_month:
-        start_bar = datetime.date(month=start_month, year=start_year, day=1)
-        start_total = datetime.date(month=start_month, year=start_year, day=1)
-        if end_year == datetime.date.today().year and end_month == datetime.date.today().month:
-            if datetime.date.today().month > 6:
-                end = datetime.date(year=datetime.date.today().year,
-                                    month=datetime.date.today().month, day=datetime.date.today().day)
-            else:
-                end = datetime.date(year=datetime.date.today().year,
-                                    month=datetime.date.today().month, day=datetime.date.today().day)
-        else:
-            if end_month == 12:
-                end = datetime.date(year=end_year + 1, month=1, day=1) - timedelta(days=1)
-            else:
-                end = datetime.date(year=end_year, month=end_month + 1, day=1) - timedelta(days=1)
-    elif not start_year and not end_year and not start_month and not end_month:
-        start_total = datetime.date.today() - timedelta(days=365)
-        if datetime.date.today().month > 6:
-            start_bar = datetime.date(year=datetime.date.today().year, month=datetime.date.today().month - 5, day=1)
-            end = datetime.date(year=datetime.date.today().year,
-                                month=datetime.date.today().month, day=datetime.date.today().day)
-        else:
-            start_bar = datetime.date(year=datetime.date.today().year - 1, month=datetime.date.today().month + 7, day=1)
-            end = datetime.date(year=datetime.date.today().year,
-                                month=datetime.date.today().month, day=datetime.date.today().day)
-    else:
-        return str({'msg': 'time_range_incomplete'})
+    start_total, start_bar, end = utils.retrieve_get_args_for_customer_date_spent(request)
 
     my_flights = mt.customer_query(user=user, table='flight NATURAL JOIN ticket NATURAL JOIN purchases',
                                    attribute='customer_email', value=user[:-2])
     flights_list = utils.flight_list_to_json_list([i[1:10] for i in my_flights])
     date_price = [(i[12], i[7]) for i in my_flights]
+
+    if start_total is False:
+        return {'user': user[:-2], 'role': 'Customer', 'msg': 'time incomplete',
+                'flight': flights_list, }
 
     time_cursor = start_bar
     spent_dict = {}
@@ -570,11 +602,86 @@ def profile_customer(user):
 
 
 def profile_agent(user):
-    return 'profile of agent: ' + user
+    start, end = utils.retrieve_get_args_for_agent_date_commission(request)
+
+    id = mt.root_get_agent_id_from_email(user='root', email=user[:-2])
+    my_flights = mt.agent_query(user=user, table='flight NATURAL JOIN ticket NATURAL JOIN purchases',
+                                attribute='booking_agent_id', value=id)
+    flights_list = utils.flight_list_to_json_list([i[1:10] for i in my_flights])
+    customer_date_price = [(i[10], i[12], i[7]) for i in my_flights]
+    ticket_num = len(customer_date_price)
+
+    six_month_before = datetime.date.today() - timedelta(days=30 * 6)
+    one_year_before = datetime.date.today() - timedelta(days=365)
+    now = datetime.date.today()
+    top_five_bought, top_five_commission = {}, {}
+
+    for i in customer_date_price:
+        if six_month_before <= i[1] <= now:
+            if i[0] not in top_five_commission:
+                top_five_commission[i[0]] = i[2] / 10
+            else:
+                top_five_commission[i[0]] += i[2] / 10
+            if i[0] not in top_five_bought:
+                top_five_bought[i[0]] = 1
+            else:
+                top_five_bought[i[0]] += 1
+        elif one_year_before <= i[1] <= now:
+            if i[0] not in top_five_commission:
+                top_five_commission[i[0]] = i[2] / 10
+            else:
+                top_five_commission[i[0]] += i[2] / 10
+
+    top_five_bought_list = sorted(top_five_bought.items(), key=lambda x: x[1], reverse=True)
+    top_five_commission_list = sorted(top_five_commission.items(), key=lambda x: x[1], reverse=True)
+    nb = 5 if len(top_five_bought_list) >= 5 else len(top_five_bought_list)
+    nc = 5 if len(top_five_commission_list) >= 5 else len(top_five_commission_list)
+    top_five_bought = {top_five_bought_list[i][0]: top_five_bought_list[i][1] for i in range(nb)}
+    top_five_commission = {top_five_commission_list[i][0]: top_five_commission_list[i][1] for i in range(nc)}
+
+    if start is False:
+        return {'user': user[:-2], 'role': 'Agent', 'msg': 'time incomplete',
+                'flight': flights_list, 'top_five_bought': top_five_bought, 'top_five_commission': top_five_commission}
+
+    total_commission = 0
+    for i in customer_date_price:
+        if start <= i[1] <= end:
+            total_commission += i[2]
+    average_commission = total_commission / ticket_num
+
+    return str({'user': user[:-2], 'role': 'Agent', 'msg': 'ok',
+                'flight': flights_list, 'top_five_bought': top_five_bought, 'top_five_commission': top_five_commission,
+                'total_commission': total_commission, 'average_commission': average_commission,
+                'total_sold': ticket_num})
 
 
 def profile_staff(user):
-    return 'profile of staff: ' + user
+    # functions too complected, moved to utils.py
+    top_ba_ticket_last_month, top_ba_ticket_last_year, top_ba_commission_last_year = \
+        utils.staff_functions(mt, user, request, action='all_booking_agents')
+    frequent_customer, customer_flight = utils.staff_functions(mt, user, request, action='frequent_customers')
+    customer_flight = utils.flight_list_to_json_list(customer_flight)
+    total_ticket, month_wise_ticket = utils.staff_functions(mt, user, request, action='report')
+    result = utils.staff_functions(mt, user, request, action='revenue')
+    revenue_direct_last_month, revenue_direct_last_year, \
+    revenue_indirect_last_month, revenue_indirect_last_year = \
+        result[0], result[1], result[2], result[3]
+    top_destination_last_three_month, top_destination_last_year = \
+        utils.staff_functions(mt, user, request, action='destinations')
+    myjson = {'top_ba_ticket_last_month': top_ba_ticket_last_month,
+              'top_ba_ticket_last_year': top_ba_ticket_last_year,
+              'top_ba_commission_last_year': top_ba_commission_last_year,
+              'frequent_customer': frequent_customer,
+              'customer_flight': customer_flight,
+              'total_ticket': total_ticket,
+              'month_wise_ticket': month_wise_ticket,
+              'revenue_direct_last_month': revenue_direct_last_month,
+              'revenue_direct_last_year': revenue_direct_last_year,
+              'revenue_indirect_last_month': revenue_indirect_last_month,
+              'revenue_indirect_last_year': revenue_indirect_last_year,
+              'top_destination_last_three_month': top_destination_last_three_month,
+              'top_destination_last_year': top_destination_last_year}
+    return str(myjson)
 
 
 #################
