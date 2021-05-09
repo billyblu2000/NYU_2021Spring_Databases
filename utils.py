@@ -94,25 +94,26 @@ def validate_user(role="ABC"):
 ###############################
 
 def retrieve_get_args_for_flight_query(request):
-    departure_city = request.args.get('departure_city')
-    departure_airport = request.args.get('departure_airport')
-    arrival_city = request.args.get('arrival_city')
-    arrival_airport = request.args.get('arrival_airport')
-    departure_time = request.args.get('departure_time')
-    arrival_time = request.args.get('arrival_time')
-    airline = request.args.get('airline_name')
-    flight_num = None
-    if airline is not None:
-        flight_num = request.args.get('flight_num')
-        if flight_num is not None:
-            flight_num = int(flight_num)
-    price = request.args.get('price')
-    if price:
-        price = (float(price.split("|")[0]), float(price.split("|")[1]))
-    status = request.args.get('status')
-    airplane_id = request.args.get('airplane_id')
+    departure_city = get_arg_value_with_key_name(request,'departure_city')
+    departure_airport = get_arg_value_with_key_name(request,'departure_airport')
+    arrival_city = get_arg_value_with_key_name(request,'arrival_city')
+    arrival_airport = get_arg_value_with_key_name(request,'arrival_airport')
+    departure_time = get_arg_value_with_key_name(request,'departure_time')
+    arrival_time = get_arg_value_with_key_name(request,'arrival_time')
+    flight_num = get_arg_value_with_key_name(request,'flight_num')
+    if flight_num:
+        flight_num = int(flight_num)
+    airline, price, status, airplane_id = None, None, None, None
     return (airline, flight_num, departure_airport, departure_city, departure_time,
             arrival_airport, arrival_city, arrival_time, price, status, airplane_id)
+
+
+def get_arg_value_with_key_name(request, key):
+    result = request.args.get(key)
+    if result != '' and result is not None:
+        return result
+    else:
+        return None
 
 
 def retrieve_get_args_for_customer_date_spent(request):
@@ -230,10 +231,20 @@ def staff_functions(mysqltool, mysqltool_user, request, action):
 
         frequent_customer = mysqltool.root_sql_query(user='root', stmt=stmt, value=[str(one_year_before)])[0][0]
 
+        stmt = 'SELECT * FROM customer WHERE email = %s'
+        customer_info = mysqltool.root_sql_query(user='root', stmt=stmt, value=[frequent_customer])[0]
+        customer_info = {
+            'email':customer_info[0],
+            'name':customer_info[1],
+            'city':customer_info[5],
+            'state':customer_info[6],
+            'nationality':customer_info[10],
+            'birthday':customer_info[11]
+        }
         if request.args.get('customer_email'):
             customer_email = request.args.get('customer_email')
         else:
-            customer_email = frequent_customer
+            customer_email = customer_info['email']
 
         result = mysqltool.staff_query(user=mysqltool_user,
                                        table='flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN '
@@ -241,7 +252,7 @@ def staff_functions(mysqltool, mysqltool_user, request, action):
                                        attribute=['customer_email', 'username'],
                                        value=[customer_email, mysqltool_user[:-2]])
         result = [[i[0]] + list(i[2:10]) for i in result]
-        return frequent_customer, result
+        return customer_info, result
 
     elif action == 'report':
         start, end = retrieve_get_args_for_staff_date_report(request)
@@ -323,7 +334,8 @@ def airport_city_to_airport_name_list(mysqltool, mysqltool_user, airport_city, a
         else:
             return airport_name
     if airport_city:
-        airports = query_func(user=mysqltool_user, table='airport', attribute='airport_city', value=airport_city)
+        airports = mysqltool.root_sql_query(user='root', stmt='SELECT * FROM airport WHERE airport_city LIKE %s',
+                                            value=[airport_city+ '%'])
         if len(airports) > 0:
             return [airport[0] for airport in airports]
         else:

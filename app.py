@@ -315,6 +315,7 @@ def home_customer(user):
 
     attribute = ['airline_name', 'flight_num', 'departure_airport', 'departure_time', 'arrival_airport', 'arrival_time']
     value = [airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time]
+    print(value)
     result = mt.customer_query(user=session['user'], table='flight', attribute=attribute, value=value)
     if price:
         actual_result = []
@@ -574,8 +575,9 @@ def profile_customer(user):
     date_price = [(i[12], i[7]) for i in my_flights]
 
     if start_total is False:
-        return {'user': user[:-2], 'role': 'Customer', 'msg': 'time incomplete',
+        my_json = {'user': user[:-2], 'role': 'Customer', 'msg': 'time incomplete',
                 'flight': flights_list, }
+        return render_template('profile.html', data=my_json)
 
     time_cursor = start_bar
     spent_dict = {}
@@ -598,7 +600,7 @@ def profile_customer(user):
             total += price
     my_json = {'user': user[:-2], 'role': 'Customer', 'msg': 'ok',
                'flight': flights_list, 'total': total, 'bar': spent_dict}
-    return str(my_json)
+    return render_template('profile.html', data=my_json)
 
 
 def profile_agent(user):
@@ -640,8 +642,9 @@ def profile_agent(user):
     top_five_commission = {top_five_commission_list[i][0]: top_five_commission_list[i][1] for i in range(nc)}
 
     if start is False:
-        return {'user': user[:-2], 'role': 'Agent', 'msg': 'time incomplete',
+        my_json = {'user': user[:-2], 'role': 'Agent', 'msg': 'time incomplete',
                 'flight': flights_list, 'top_five_bought': top_five_bought, 'top_five_commission': top_five_commission}
+        return render_template('profile.html', data=my_json)
 
     total_commission = 0
     for i in customer_date_price:
@@ -649,10 +652,11 @@ def profile_agent(user):
             total_commission += i[2]
     average_commission = total_commission / ticket_num
 
-    return str({'user': user[:-2], 'role': 'Agent', 'msg': 'ok',
+    my_json = {'user': user[:-2], 'role': 'Agent', 'msg': 'ok',
                 'flight': flights_list, 'top_five_bought': top_five_bought, 'top_five_commission': top_five_commission,
                 'total_commission': total_commission, 'average_commission': average_commission,
-                'total_sold': ticket_num})
+                'total_sold': ticket_num}
+    return render_template('profile.html', data=my_json)
 
 
 def profile_staff(user):

@@ -407,6 +407,25 @@ class MySQLTool:
                     new_attribute.append(attribute[i])
                     new_value.append(value[i])
             attribute, value = new_attribute, new_value
+        if attribute is not None:
+            if 'departure_time' in attribute:
+                index = attribute.index('departure_time')
+                departure_time = value[index]
+                if departure_time is not None:
+                    departure_time_start, departure_time_end = departure_time + " 00:00:00", departure_time + " 23:59:59"
+                    value = value[:index] + [departure_time_start, departure_time_end] + value[index+1:]
+            if 'arrival_time' in attribute:
+                if 'departure_time' in attribute:
+                    index = attribute.index('departure_time')
+                    departure_time = value[index]
+                    if departure_time is not None:
+                        index = attribute.index('arrival_time') + 1
+                else:
+                    index = attribute.index('arrival_time')
+                arrival_time = value[index]
+                if arrival_time is not None:
+                    arrival_time_start, arrival_time_end = arrival_time + " 00:00:00", arrival_time + " 23:59:59"
+                    value = value[:index] + [arrival_time_start, arrival_time_end] + value[index + 1:]
         sub_stmt = self.__create_stmt_attr_value(attribute=attribute, value=value)
         if sub_stmt != '':
             stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
@@ -433,10 +452,11 @@ class MySQLTool:
             return ''
         if type(attribute) is not list:
             attribute, value = [attribute], [value]
-        assert len(attribute) == len(value)
         sub_stmt = ''
         for i in range(len(attribute)):
-            if type(value[i]) is list:
+            if attribute[i] == 'departure_time' or attribute[i] == 'arrival_time':
+                sub_stmt += 'AND ' + attribute[i] + ' BETWEEN %s AND %s '
+            elif type(value[i]) is list:
                 temp = '('
                 for j in range(len(value[i])):
                     temp += '%s, '

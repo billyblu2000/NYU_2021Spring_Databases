@@ -12,29 +12,6 @@
     <section class="banner" id="top">
         <div class="container">
             <div class="row">
-                <div class="topnav">
-                    <a class="active" href="#home">Home</a>
-                {% if data['role'] == 'Guest' %}                                                
-                    <a href="#flights">Flights</a>
-                {% elif data['role'] == 'Customer' %}
-                    <a href="#flights">Flights</a>
-                    <a href="#spending">Spending</a>
-                    <a href="/logout/">Log Out</a>
-                {% elif data['role'] == 'Agent' %}
-                    <a href="#flights">Flights</a>
-                    <a href="#commission">Commission</a>
-                    <a href="#top_customer">Top Customers</a>
-                    <a href="/logout/">Log Out</a>
-                {% elif data['role'] == 'Staff' %}
-                    <a href="#add">Add</a>
-                    <a href="#frequent_customer">Frequent Customers</a>
-                    <a href="#report">Report</a>
-                    <a href="#earned">Revenue earned</a>
-                    <a href="#top_destination">Top Destination</a>
-                    <a href="/logout/">Log Out</a>
-                {% endif %}
-
-                </div>
                 <div class="col-md-5 col-md-offset-1">
                     <div class="tabs-content">
                         <form class="box">
@@ -45,23 +22,41 @@
                                     <a href="/register/agent">Register as Agent</a>
                                 <h2>Already have one?</h2>
                                     <a href="/login">Login</a>
-                            {% else %}
+                            {% elif data['role'] == 'Customer' %}
                                 <h2>Welcome, {{data['user']}}</h2>
-
+                                    <a href="#flights">Recommend Flights</a>
+                                    <a href="/profile/">Profile</a>
+                                    <a href="/logout/">Log Out</a>
+                            {% elif data['role'] == 'Agent' %}
+                                <h2>Welcome, {{data['user']}}</h2>
+                                    <a href="#flights">Flights</a>
+                                    <a href="/profile/">Profile</a>
+                                    <a href="#commission">Commission</a>
+                                    <a href="#top_customer">Top Customers</a>
+                                    <a href="/logout/">Log Out</a>
+                            {% elif data['role'] == 'Staff' %}
+                                <h2>Welcome, {{data['user']}}</h2>
+                                    <a href="/profile/">Profile</a>
+                                    <a href="#add">Add</a>
+                                    <a href="#frequent_customer">Frequent Customers</a>
+                                    <a href="#report">Report</a>
+                                    <a href="#earned">Revenue earned</a>
+                                    <a href="#top_destination">Top Destination</a>
+                                    <a href="/logout/">Log Out</a>
                             {% endif %}
-          
                         </form>
                     </div>
                 </div>
+
                 <div class="col-md-5 col-md-offset-1">
                     <div class="submit-form">
                         <h4>Check availability for <em>direction</em>:</h4>
-                        <form id="form-submit" action="" method="get">
+                        <form id="form-submit" action="/home/" method="get">
                             <div class="row">
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="from">From:</label>
-                                        <select name='from' onchange='this.form.()'>
+                                        <select name='departure_city' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
                                             {% for i in data['departure_cities'] %}                                                
                                                 <option value={{ i }}>{{ i }}</option>
@@ -72,7 +67,7 @@
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="to">To:</label>
-                                        <select name='to' onchange='this.form.()'>
+                                        <select name='arrival_city' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
                                             {% for i in data['arrival_cities'] %}                                                
                                                 <option value={{ i }}>{{ i }}</option>
@@ -83,19 +78,19 @@
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="departure">Departure date:</label>
-                                        <input name="deparure" type="date" class="form-control date" id="deparure" placeholder="Select date..." onchange='this.form.()'>
+                                        <input name="departure_time" type="date" class="form-control date" id="deparure" value="" placeholder="Select date..." onchange='this.form.()'>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="return">Return date:</label>
-                                        <input name="return" type="date" class="form-control date" id="return" placeholder="Select date..." onchange='this.form.()'>
+                                        <input name="arrival_time" type="date" class="form-control date" id="return"  value="" placeholder="Select date..." onchange='this.form.()'>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
                                         <label for="airline">Airline:</label>
-                                        <select name='airline' onchange='this.form.()'>
+                                        <select name='airline_name' onchange='this.form.()'>
                                             <option value="">Select a airline</option>
                                             {% for i in data['airlines'] %}                                                
                                                 <option value={{ i }}>{{ i }}</option>
@@ -105,8 +100,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <fieldset>
-                                        <label for="ticket id">Search by id:</label>
-                                        <input name="search id" type="search" id="search id" placeholder="Order by id" onchange='this.form.()'>
+                                        <label for="ticket_id">Search by id:</label>
+                                        <input name="flight_num" type="search" id="search id"  value="" placeholder="Order by id" onchange='this.form.()'>
                                     </fieldset>
                                 </div>
                                 <div class="col-md-6">
@@ -129,18 +124,15 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="section-heading" id = "flights">
-                        {% if data['role'] == 'Guest' %}  
+                        {% if data['role'] != 'Staff' %}  
                         <h2>Recommended Flights For You</h2>
-                        {% elif data['role'] == 'Customer' %}  
-                        <h2>My Flights</h2>
-                        {% elif data['role'] == 'Staff' %}  
+                        {% else %}
                         <h2>Frequent Customers</h2>
-                        {% elif data['role'] == 'Agent' %}  
-                        <h2>My Flights</h2>
                         {% endif %}
                     </div>
                 </div>
                 <div class="col-md-12">
+                {% if data['role'] != 'Staff' %}
                 <table class="content-table">
                     <thead>
                         <tr>
@@ -155,74 +147,117 @@
                         <th>Price</th>
                         <th>Status</th>
                         <th>Airplane Id</th>
-                        <th>Purchase</th>
-                        <th>Edit</th>
                         {% if data['role'] == 'Staff' %}
-                        <th>Delete</th>
+                        <th>Edit</th>
+                        <th>Add</th>
+                        {% else %}
+                        <th>Purchase</th>
                         {% endif %}
                         </tr>
                     </thead>
-                    <tbody  id="myTable">
-                        
+                    <tbody  id="recommend-flight-info">                    
                     </tbody>
-                    </table>
+                </table>
+                {% endif %}
                 <script>
                 var myArray = {{ data['flights']|safe }};
-                var table = document.getElementById('myTable');
+                var table = document.getElementById('recommend-flight-info');
                 function create_table(myArray){
                     for (var i = 0; i < myArray.length; i++){
                         var row = `<tr>
-                                        <td>${myArray[i].airline_name}</td>
-                                        <td>${myArray[i].flight_num}</td>
-                                        <td>${myArray[i].departure_airport}</td>
-                                        <td>${myArray[i].departure_date}</td>
-                                        <td>${myArray[i].departure_time}</td>
-                                        <td>${myArray[i].arrival_airport}</td>
-                                        <td>${myArray[i].arrival_date}</td>
-                                        <td>${myArray[i].arrival_time}</td>
-                                        <td>${myArray[i].price}</td>
-                                        <td>${myArray[i].status}</td>
-                                        <td>${myArray[i].airplane_id}</td>
-                                        <td><input id="purchase_btn" type="submit" value = "Purchase" ></button></td>
-                                        <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
-                                        {% if data['role'] == 'Staff' %}
-                                        <td><input id="remove_btn" type="submit" value = "Remove" onclick="remove(`+i+`)"></button></td>
-                                        {% endif %}
+                                    <td>${myArray[i].airline_name}</td>
+                                    <td>${myArray[i].flight_num}</td>
+                                    <td>${myArray[i].departure_airport}</td>
+                                    <td>${myArray[i].departure_date}</td>
+                                    <td>${myArray[i].departure_time}</td>
+                                    <td>${myArray[i].arrival_airport}</td>
+                                    <td>${myArray[i].arrival_date}</td>
+                                    <td>${myArray[i].arrival_time}</td>
+                                    <td>${myArray[i].price}</td>
+                                    <td>${myArray[i].status}</td>
+                                    <td>${myArray[i].airplane_id}</td>
+                                    <td><input id="purchase_btn" type="submit" value = "Purchase" onclick="purchase_s_or_f()" href="/purchase/?airline_name=${myArray[i].airline_name}&flight_num=${myArray[i].flight_num}" ></button></td>
+                                    {% if data['role'] == 'Staff' %}
+                                    <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
+                                    <td><input id="Add_btn" type="submit" value = "Add" onclick="add()"></button></td>
+                                    {% endif %}
                                 </tr>`
                         table.innerHTML += row
                     }
                 }
-                create_table(myArray)
+                create_table(myArray);
 
                 function edit(i) {
                     table.innerHTML = "";
                     create_table(myArray.slice(0, i));
                     var new_row = `<tr>
-                                        <td contenteditable='true'>${myArray[i].airline_name}</td>
-                                        <td contenteditable='true'>${myArray[i].flight_num}</td>
-                                        <td contenteditable='true'>${myArray[i].departure_airport}</td>
-                                        <td contenteditable='true'>${myArray[i].departure_date}</td>
-                                        <td contenteditable='true'>${myArray[i].departure_time}</td>
-                                        <td contenteditable='true'>${myArray[i].arrival_airport}</td>
-                                        <td contenteditable='true'>${myArray[i].arrival_date}</td>
-                                        <td contenteditable='true'>${myArray[i].arrival_time}</td>
-                                        <td contenteditable='true'>${myArray[i].price}</td>
-                                        <td><select name='from' onchange='this.form.()'>
-                                            <option value="${myArray[i].status}">${myArray[i].status}</option>
-                                            <option value="upcoming">upcoming</option>
-                                            <option value="delayed">delayed</option>
-                                            <option value="cancel">cancel</option>
-                                        <td contenteditable='true'>${myArray[i].airplane_id}</td>
-                                        <td><input id="save_btn" type="submit" value = "Save" onclick="save(`+i+`)"></button></td>
-                                        <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
-                                </tr>`
+                                    <td contenteditable='true'>${myArray[i].airline_name}</td>
+                                    <td contenteditable='true'>${myArray[i].flight_num}</td>
+                                    <td contenteditable='true'>${myArray[i].departure_airport}</td>
+                                    <td contenteditable='true'>${myArray[i].departure_date}</td>
+                                    <td contenteditable='true'>${myArray[i].departure_time}</td>
+                                    <td contenteditable='true'>${myArray[i].arrival_airport}</td>
+                                    <td contenteditable='true'>${myArray[i].arrival_date}</td>
+                                    <td contenteditable='true'>${myArray[i].arrival_time}</td>
+                                    <td contenteditable='true'>${myArray[i].price}</td>
+                                    <td><select name='from' onchange='this.form.()'>
+                                        <option value="${myArray[i].status}">${myArray[i].status}</option>
+                                        <option value="upcoming">upcoming</option>
+                                        <option value="delayed">delayed</option>
+                                        <option value="cancel">cancel</option>
+                                    <td contenteditable='true'>${myArray[i].airplane_id}</td>
+                                    <td><input id="save_btn" type="submit" value = "Save" onclick="save(`+i+`)"></button></td>
+                                    <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
+                            </tr>`
                     table.innerHTML += new_row;
                     create_table(myArray.slice(i+1));
                 }
-                function remove(indice) {
-                    myArray.splice(indice, 1);
-                    table.innerHTML = "";
-                    create_table(myArray);
+                function add(indice) {
+                    var new_row = `<tr>
+                                    <td>
+                                        <select name='airline_name' onchange='this.form.()'>
+                                            <option value="">Select a airline</option>
+                                            {% for i in data['airlines'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %}   
+                                        </select>
+                                    </td>
+                                    <td contenteditable='true'>flight number</td>
+                                    <td>
+                                        <select name='departure_airport' onchange='this.form.()'>
+                                            <option value="">Select an airport</option>
+                                            {% for i in data['departure_airport'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %} 
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input name="departure_time" type="date" class="form-control date" id="deparure" value="" placeholder="Select date..." onchange='this.form.()'>
+                                    </td>
+                                    <td contenteditable='true'>Departure Time</td>
+                                    <td>
+                                        <select name='arrival_city' onchange='this.form.()'>
+                                            <option value="">Select an airport</option>
+                                            {% for i in data['arrival_cities'] %}                                                
+                                                <option value={{ i }}>{{ i }}</option>
+                                            {% endfor %} 
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input name="arrival_time" type="date" class="form-control date" id="return"  value="" placeholder="Select date..." onchange='this.form.()'>
+                                    </td>
+                                    <td contenteditable='true'>Arrival Time</td>
+                                    <td contenteditable='true'>Price</td>
+                                    <td><select name='from' onchange='this.form.()'>
+                                        <option value="${myArray[i].status}">${myArray[i].status}</option>
+                                        <option value="upcoming">upcoming</option>
+                                        <option value="delayed">delayed</option>
+                                        <option value="cancel">cancel</option>
+                                    <td contenteditable='true'>Airplane ID</td>
+                                    <td><input id="save_btn" type="submit" value = "Save" onclick="save(`+i+`)"></button></td>
+                                    <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
+                            </tr>`
+                    table.innerHTML += new_row;
                 }
                 function save(indice) {
                     table.innerHTML = "";
@@ -232,31 +267,47 @@
                     table.innerHTML = "";
                     create_table(myArray.slice(0, i));
                     var row = `<tr>
-                                        <td>${myArray[i].airline_name}</td>
-                                        <td>${myArray[i].flight_num}</td>
-                                        <td>${myArray[i].departure_airport}</td>
-                                        <td>${myArray[i].departure_date}</td>
-                                        <td>${myArray[i].departure_time}</td>
-                                        <td>${myArray[i].arrival_airport}</td>
-                                        <td>${myArray[i].arrival_date}</td>
-                                        <td>${myArray[i].arrival_time}</td>
-                                        <td>${myArray[i].price}</td>
-                                        <td>${myArray[i].status}</td>
-                                        <td>${myArray[i].airplane_id}</td>
-                                        <td><input id="purchase_btn" type="submit" value = "Purchase" ></button></td>
-                                        <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
-                                        {% if data['role'] == 'Staff' %}
-                                        <td><input id="remove_btn" type="submit" value = "Remove" onclick="remove(`+i+`)"></button></td>
-                                        {% endif %}
+                                <td>${myArray[i].airline_name}</td>
+                                <td>${myArray[i].flight_num}</td>
+                                <td>${myArray[i].departure_airport}</td>
+                                <td>${myArray[i].departure_date}</td>
+                                <td>${myArray[i].departure_time}</td>
+                                <td>${myArray[i].arrival_airport}</td>
+                                <td>${myArray[i].arrival_date}</td>
+                                <td>${myArray[i].arrival_time}</td>
+                                <td>${myArray[i].price}</td>
+                                <td>${myArray[i].status}</td>
+                                <td>${myArray[i].airplane_id}</td>
+                                <td><input id="purchase_btn" type="submit" value = "Purchase" ></button></td>
+                                <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
+                                {% if data['role'] == 'Staff' %}
+                                <td><input id="remove_btn" type="submit" value = "Remove" onclick="remove(`+i+`)"></button></td>
+                                {% endif %}
                                 </tr>`
                     table.innerHTML += row;
                     create_table(myArray.slice(i+1));
                 }
+                function purchase_s_or_f(msg){
+                    var window = document.getElementById("purchase_status");
+                    window.style.display = "block";
+                }
+                
                 </script>
                 </div>
             </div>
         </div>
     </div>
+    <div id="purchase_status" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        {% if data['msg'] == 'success' %}
+            <p>Purchase Complete!</p>
+        {% else %}
+            <p>Purchase Fail!</p>
+        {% endif %}
+    </div>
+
+</div>
 </body>
 <style>
 	* {
@@ -270,19 +321,20 @@
         }
 
         .topnav {
-        background-color: rgba(250, 250, 250, 0.01);
+        background-color: rgba(250, 250, 250, 0.3);
         overflow: hidden;
-        width: 100%;
+        position: fixed;
+        top: 0;
+        width: 90%;
         }
 
         .topnav a {
-        margin-left:20px;
+        
         color: rgba(250, 250, 250, 0.5);
         text-align: center;
-        padding: 14px 16px;
         display: inline-block;
         text-decoration: none;
-        font-size: 17px;
+        font-size: 14px;
         
         }
 
@@ -309,7 +361,7 @@
         .banner {
             background-image: url(../static/img/banner-bg.jpg);
             background-repeat: no-repeat;
-            background-size: 1600px 900px;
+            background-size: 1800px 1000px;
             background-position: center center;
             text-align: center;
         }
@@ -323,11 +375,11 @@
         }
 
         .banner .page-direction-button {
-            margin-top: 120px;
+            margin-top: 80px;
         }
 
         .banner .tabs-content {
-            margin-top: 120px;
+            margin-top: 60px;
         }
 
         .banner .tabs-content h4 {
@@ -340,7 +392,7 @@
 
         .banner .submit-form {
             text-align: left;
-            margin: 155px 20px;
+            margin: 85px 20px;
             background-color: rgba(250, 250, 250, 0.95);
             padding: 20px;
             padding-bottom: 50px;
@@ -526,11 +578,13 @@
         .order_btn:hover{
 			background-color: #2ecc71;
 			}
+        
         .content-table {
             border-collapse: collapse;
             margin: 5px 0;
             font-size: 0.8em;
             min-width: 1200px;
+            max-height: 580px;
             border-radius: 5px 5px 0 0;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
@@ -566,7 +620,7 @@
             font-weight: bold;
             color: #009879;
             }
-        #myTable input {
+        #recommend-flight-info input {
             width: 65px;
             height: 32px;
             font-size: 0.8em;
@@ -577,7 +631,7 @@
 			background-color: #f3f3f3;
 			text-align: center;
         }
-        #myTable input:hover{
+        #recommend-flight-info input:hover{
             background-color: #2ecc71;
         }
 	</style>
