@@ -19,6 +19,8 @@ class MySQLTool:
     # stored SQL queries and constants
     STMT_GET_ALL_AIRLINES = 'SELECT airline_name FROM airline'
     STMT_GET_ALL_AIRPORTS = 'SELECT airport_name FROM airport'
+    STMT_GET_ALL_AIRPLANES_GIVEN_STAFF = 'SELECT airplane_id, seats FROM airplane NATURAL JOIN airline_staff ' \
+                                         'WHERE username = %s'
     STMT_GET_ALL_AIRPLANES_FOR_AIRLINE = 'SELECT airplane_id, seats FROM airplane ' \
                                          'NATURAL JOIN airline NATURAL JOIN airline_staff WHERE username = %s'
     STMT_GET_ALL_FLIGHTS = 'SELECT * FROM flight'
@@ -91,9 +93,11 @@ class MySQLTool:
                 return False
             try:
                 if flight_stmt != '':
+                    print("f:",flight_stmt, value)
                     cursor = self._conn.cursor(prepared=True)
                     cursor.execute(flight_stmt, value)
                 if ticket_stmt != '':
+                    print("t:", table, ticket_values)
                     cursor = self._conn.cursor(prepared=True)
                     cursor.execute(ticket_stmt, ticket_values)
             except Exception as e:
@@ -101,18 +105,19 @@ class MySQLTool:
                 self._conn.rollback()
                 return False
         if table == 'airport':
-            stmt = 'INSERT INTO airport VALUE (%S,%S)'
+            stmt = 'INSERT INTO airport VALUE (%s,%s)'
             cursor = self._conn.cursor(prepared=True)
+            print(stmt,value)
             try:
-                cursor.execute(stmt, value=value)
+                cursor.execute(stmt, value)
             except:
                 self._conn.rollback()
                 return False
         if table == 'airplane':
-            stmt = 'INSERT INTO airplane VALUE (%S,%S,%S)'
+            stmt = 'INSERT INTO airplane VALUE (%s,%s,%s)'
             cursor = self._conn.cursor(prepared=True)
             try:
-                cursor.execute(stmt, value=value)
+                cursor.execute(stmt,value)
             except:
                 self._conn.rollback()
                 return False
@@ -150,9 +155,7 @@ class MySQLTool:
         sub_stmt = 'INSERT INTO ticket VALUES '
         values = []
         for i in range(seats):
-            id = random.randint(10000000, 99999999)
-            while id in existing_ticket_id:
-                id = random.randint(10000000, 99999999)
+            id = max(existing_ticket_id) + 1
             existing_ticket_id.append(id)
             sub_stmt += '(%s,%s,%s),'
             values += [id, airline_name, flight_num]
@@ -164,7 +167,6 @@ class MySQLTool:
     def staff_update(self, user, table, pk, attribute, value):
         if table not in ['flight']:
             return None
-        log("Staff {u} updated {t}".format(u=user[:-2], t=table))
         stmt = 'UPDATE flight SET '+ self.__create_stmt_attr_value(attribute, value) + ' ' \
                + 'WHERE airline_name = %s AND flight_num = %s'
         cursor = self._conn.cursor(prepared=True)
@@ -298,11 +300,25 @@ class MySQLTool:
             cursor = self._conn.cursor()
             cursor.execute(stmt)
             result = cursor.fetchall()
+            result = [list(result[i]) for i in range(len(result))]
+            for i in range(len(result)):
+                if result[i] is not None:
+                    for j in range(len(result[i])):
+                        if type(result[i][j]) is bytearray:
+                            result[i][j] = result[i][j].decode('utf-8')
             return result
         else:
             cursor = self._conn.cursor(prepared=True)
             cursor.execute(stmt, value)
-            return cursor.fetchall()
+            result = cursor.fetchall()
+            result = [list(result[i]) for i in range(len(result))]
+            for i in range(len(result)):
+                if result[i] is not None:
+                    for j in range(len(result[i])):
+                        if type(result[i][j]) is bytearray:
+                            result[i][j] = result[i][j].decode('utf-8')
+            #print(result)
+            return result
 
     @validate_user(role='root')
     def root_sql_alter(self, user, stmt):
@@ -311,6 +327,7 @@ class MySQLTool:
             cursor.execute(stmt)
         except Exception as e:
             self._conn.rollback()
+            print(e)
             return False
         self._conn.commit()
         return True
@@ -386,6 +403,7 @@ class MySQLTool:
                'WHERE t.airline_name=%s AND t.flight_num=%s AND t.ticket_id NOT IN ' \
                '(SELECT ticket_id FROM purchases)'
         result = self.root_sql_query(user=user, stmt=stmt, value=[airline_name, flight_num])
+        print(result)
         if len(result) == 0:
             return False
         else:
@@ -413,19 +431,13 @@ class MySQLTool:
                 departure_time = value[index]
                 if departure_time is not None:
                     departure_time_start, departure_time_end = departure_time + " 00:00:00", departure_time + " 23:59:59"
-                    value = value[:index] + [departure_time_start, departure_time_end] + value[index+1:]
+                    value = value[:index] + [[departure_time_start, departure_time_end]] + value[index+1:]
             if 'arrival_time' in attribute:
-                if 'departure_time' in attribute:
-                    index = attribute.index('departure_time')
-                    departure_time = value[index]
-                    if departure_time is not None:
-                        index = attribute.index('arrival_time') + 1
-                else:
-                    index = attribute.index('arrival_time')
+                index = attribute.index('arrival_time')
                 arrival_time = value[index]
                 if arrival_time is not None:
                     arrival_time_start, arrival_time_end = arrival_time + " 00:00:00", arrival_time + " 23:59:59"
-                    value = value[:index] + [arrival_time_start, arrival_time_end] + value[index + 1:]
+                    value = value[:index] + [[arrival_time_start, arrival_time_end]] + value[index + 1:]
         sub_stmt = self.__create_stmt_attr_value(attribute=attribute, value=value)
         if sub_stmt != '':
             stmt = 'SELECT * FROM ' + table + ' WHERE' + sub_stmt
@@ -442,8 +454,17 @@ class MySQLTool:
                     filled_in_values += i
         else:
             filled_in_values = [value]
+        print(stmt, filled_in_values)
         cursor.execute(stmt, filled_in_values)
-        return cursor.fetchall()
+        result = cursor.fetchall()
+        result = [list(result[i]) for i in range(len(result))]
+        for i in range(len(result)):
+                if result[i] is not None:
+                    for j in range(len(result[i])):
+                        if type(result[i][j]) is bytearray:
+                            result[i][j] = result[i][j].decode('utf-8')
+
+        return result
 
     # util method to build sub_stmt, filling in attributes and values
     @staticmethod

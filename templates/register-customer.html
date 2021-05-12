@@ -129,6 +129,9 @@
 			a:hover{
 				background-color: #2ecc71;
 			}
+            .error{
+                color: #c7254e;
+            }
 
 
 			</style>
@@ -155,6 +158,11 @@
 		
 		<input type="submit" name="" value = Register />
 		<a href="/register/">Go back</a>
+        {% if error %}
+    <div class="error">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
         
 </form>
 

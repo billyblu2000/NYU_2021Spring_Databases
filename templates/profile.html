@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    	<title>Flight Ticket Booking</title>
+        
+    </head>
+<body>
+    <script src=
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
+    </script>
+    <section class="banner" id="top">
+        <div class="container">
+            <div class="row">
+                
+                <a href="/home/">Home</a>
+                    
+                <div class="col-md-12">
+                    <div class="section-heading" id = "flights">
+                        {% if data['role'] != 'Staff' %}  
+                        <h2>My Flights</h2>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-12">
+                {% if (data['role'] != 'Staff') and (data['flight']) %}
+                    <table class="content-table">
+                        <thead>
+                            <tr>
+                            <th>Airline</th>
+                            <th>Flight num</th>
+                            <th>Departure</th>
+                            <th>Dept. Date</th>
+                            <th>Dept. Time</th>
+                            <th>Arrival</th>
+                            <th>Ariv. Date</th>
+                            <th>Ariv. Time</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Airplane Id</th>
+                            </tr>
+                        </thead>
+                        <tbody  id="my-flight-info">
+                        </tbody>
+                    </table>
+                {% elif data['customer_flight']|length == 0 %}
+                    <div class="col-md-12">
+                        <text>No Flight</text>
+                    </div>
+
+                </div>
+                {% endif %}
+                <script>
+                var myArray = {{ data['flight']|safe }};
+                console.log(myArray)
+                var table2 = document.getElementById('my-flight-info');
+                function create_table_myflight(table2,myArray){
+                    for (var i = 0; i < myArray.length; i++){
+                        var row = `<tr>
+                                        <td>${myArray[i].airline_name}</td>
+                                        <td>${myArray[i].flight_num}</td>
+                                        <td>${myArray[i].departure_airport}</td>
+                                        <td>${myArray[i].departure_date}</td>
+                                        <td>${myArray[i].departure_time}</td>
+                                        <td>${myArray[i].arrival_airport}</td>
+                                        <td>${myArray[i].arrival_date}</td>
+                                        <td>${myArray[i].arrival_time}</td>
+                                        <td>${myArray[i].price}</td>
+                                        <td>${myArray[i].status}</td>
+                                        <td>${myArray[i].airplane_id}</td>
+                                </tr>`
+                        table2.innerHTML += row;
+                    }
+                }
+                create_table_myflight(table2, myArray);
+                </script>
+
+                {% if data['role'] == 'Customer' %}
+                <div class="col-md-12">
+                    <div class="section-heading">
+                        <h2>View My Spending</h2>
+                    </div>
+                <h4>You can specify a date range to check spending</h4>
+                <form action="/profile/" method="get">
+                    <label for="sm">Start: </label>
+                    <input type="month" name="start_month" id="sm">
+                    <label for="sm">End: </label>
+                    <input type="month" name="end_month" id="em">
+                    <input class="order_btn" type="submit" value="submit">
+                </form>
+                    <h3>Total Spending: {{ data['total'] }}</h3>
+
+                    <script>
+                        window.onload = function () {
+                        var chart = new CanvasJS.Chart("chartContainer", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            data: [{
+                                type: "column",
+                                dataPoints: [
+                                    {% for i in data['bar'] %}
+                                {y: parseInt({{ i[1]}}), label: "{{i[0]}}"},
+                                    {% endfor %}
+                        ]
+                            }]
+                        });
+                        chart.render();
+                        }
+                    </script>
+                    <div id="chartContainer" style="height: 300px; width: 100%;"></div><br/><br/><br/><br/><br/><br/>
+                    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+                </div>
+
+                </div>
+                {% elif data['role'] == 'Agent' %}
+                <div class="col-md-12">
+                    <div class="section-heading">
+                        <h2>My Commission</h2>
+                    </div>
+                <h4>You can specify a date range to check commission</h4>
+                <form action="/profile/" method="get">
+                    <label for="sd">Start: </label>
+                    <input type="date" name="start" id="sd">
+                    <label for="sd">End: </label>
+                    <input type="date" name="end" id="ed">
+                    <input class="order_btn" type="submit" value="submit">
+                </form>
+                    <h4>Here is the commission result:</h4>
+                  <h4>Total Commission: {{ data['total_commission'] }}</h4>
+                  <h4>Average Commission: {{ data['average_commission'] }}</h4>
+                  <h4>Total Number of Tickets Sold: {{ data['total_sold'] }}</h4><br/><br/><br/>
+                </div>
+                <div class="col-md-12">
+                    <div class="section-heading" id = "flights">
+                        <h2>Top Customers</h2>
+                    </div>
+                </div>
+                <div class="col-md-12">
+
+                <script>
+                    window.onload = function() {
+                        var chart_customer_bought = new CanvasJS.Chart("chartContainer-0", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            data: [{
+                                type: "column",
+                                dataPoints: [
+                                    {% for i in data['top_five_bought'] %}
+                                        {y: parseInt({{ i[1]}}), label: "{{i[0]}}"},
+                                    {% endfor %}
+                                ]
+                            }]
+                        });
+                        var chart_customer_commission = new CanvasJS.Chart("chartContainer-100", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            data: [{
+                                type: "column",
+                                dataPoints: [
+                                    {% for i in data['top_five_commission'] %}
+                                        {y: parseInt({{ i[1]}}), label: "{{i[0]}}"},
+                                    {% endfor %}
+                                ]
+                            }]
+                        });
+                        chart_customer_commission.render();
+                        chart_customer_bought.render();
+                    }
+                </script>
+                    <h3>Top Five Customers (Ticket Bought)</h3>
+                    <div id="chartContainer-0" style="height: 400px; width: 100%;"></div><br/>
+                    <h3>Top Five Customers (Commission)</h3>
+                    <div id="chartContainer-100" style="height: 400px; width: 100%;"></div>
+                <br/><br/><br/><br/><br/><br/>
+                    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+                </div>
+                    {% else %}
+                <div class="col-md-12">
+                    <div class="section-heading" id = "flights">
+                        <h2>Frequent Customer: </h2>
+                        <h3>Name: {{ data['frequent_customer'].name }}</h3>
+                        <h3>Email: {{ data['frequent_customer'].email }}</h3>
+                    </div>
+                    <div class="section-heading" id = "flights">
+                        <h2>Check Customer Flights: </h2>
+                        <form action="/profile/" method="get">
+                            <h3>You can specify a customer by giving the email</h3>
+                            <input type="search" id="search id" name="customer_email" placeholder="Customer Email">
+                            <input class="order_btn" type="submit" value="Submit">
+                        </form>
+                        {% if data['customer_email'] == None %}
+                            <h3>Now showing the flights of customer "{{ data['frequent_customer'].email }}"</h3>
+                        {% else %}
+                            <h3>Now showing the flights of customer "{{ data['customer_email'] }}"</h3>
+                        {% endif %}
+                            </div>
+                        <table class="content-table">
+                            <thead>
+                                <tr>
+                                <th>Airline</th>
+                                <th>Flight num</th>
+                                <th>Departure</th>
+                                <th>Dept. Date</th>
+                                <th>Dept. Time</th>
+                                <th>Arrival</th>
+                                <th>Ariv. Date</th>
+                                <th>Ariv. Time</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Airplane Id</th>
+                                </tr>
+                            </thead>
+                            <tbody  id="frequent-customer-flight">
+                            </tbody>
+                        </table>
+                    <script>
+                        var Array_3 = {{ data['customer_flight']|safe }};
+                        var table3 = document.getElementById('frequent-customer-flight');
+                        function create_table_myflight(myArray){
+                            for (var i = 0; i < myArray.length; i++){
+                                var row = `<tr>
+                                                <td>${myArray[i].airline_name}</td>
+                                                <td>${myArray[i].flight_num}</td>
+                                                <td>${myArray[i].departure_airport}</td>
+                                                <td>${myArray[i].departure_date}</td>
+                                                <td>${myArray[i].departure_time}</td>
+                                                <td>${myArray[i].arrival_airport}</td>
+                                                <td>${myArray[i].arrival_date}</td>
+                                                <td>${myArray[i].arrival_time}</td>
+                                                <td>${myArray[i].price}</td>
+                                                <td>${myArray[i].status}</td>
+                                                <td>${myArray[i].airplane_id}</td>
+                                        </tr>`
+                                table3.innerHTML += row;
+                            }
+                        }
+                        create_table_myflight(Array_3);
+
+                        window.onload = function() {
+                        var chart_report = new CanvasJS.Chart("chartContainer-1", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            data: [{
+                                type: "column",
+                                dataPoints: [
+                                    {% for i in data['month_wise_ticket'] %}
+                                {y: parseInt({{ i[1]}}), label: "{{i[0]}}"},
+                                    {% endfor %}
+                        ]
+                            }]
+                        });
+                        var chart_pie_month = new CanvasJS.Chart("chartContainer-2", {
+                            animationEnabled: true,
+                            data: [{
+                                type: "pie",
+                                startAngle: 240,
+                                indexLabel: "{label} {y}",
+                                dataPoints: [
+                                    {y: parseInt({{ data['revenue_direct_last_month'] }}), label: "Direct (Customer)"},
+                                    {y: parseInt({{ data['revenue_indirect_last_month'] }}), label: "Indirect (Agent)"}
+                                ]
+                            }]
+                        });
+                        
+                        var chart_pie_year = new CanvasJS.Chart("chartContainer-3", {
+                            animationEnabled: true,
+                            data: [{
+                                type: "pie",
+                                startAngle: 240,
+                                yValueFormatString: "##0.00\"%\"",
+                                indexLabel: "{label} {y}",
+                                dataPoints: [
+                                    {y: parseInt({{ data['revenue_direct_last_year'] }}), label: "Direct (Customer)"},
+                                    {y: parseInt({{ data['revenue_indirect_last_year'] }}), label: "Indirect (Agent)"}
+                                ]
+                            }]
+                        });
+                        chart_report.render();
+                        chart_pie_month.render();
+                        chart_pie_year.render();
+                        }
+                    </script>
+                    <div class="section-heading"><h2>Ticket Sold report</h2></div>
+                    <h3>You can specify a date range to view ticket sold report</h3>
+                    <form action="/profile/" method="get">
+                        <label for="sd">Start: </label>
+                        <input type="date" name="start" id="sd">
+                        <label for="sd">End: </label>
+                        <input type="date" name="end" id="ed">
+                        <input class="order_btn" type="submit" value="submit">
+                    </form>
+                    <h3>Total ticket sold: {{ data['total_ticket'] }}</h3>
+                    <div id="chartContainer-1" style="height: 400px; width: 100%;"></div>
+                    <div class="section-heading"><h2>Comparison of Revenue earned-Last Month</h2></div>
+                    <div id="chartContainer-2" style="height: 400px; width: 100%;"></div>
+                    <div class="section-heading"><h2>Comparison of Revenue earned-Last Year</h2></div>
+                    <div id="chartContainer-3" style="height: 400px; width: 100%;"></div>
+                    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+                </div>
+                <div class="col-md-12">
+                    <div class="section-heading" id = "flights">
+                        <h2>Top Destinations</h2>
+                    </div>
+                    <div>
+                        <h4>Top Destination last year:
+                            {{ data['top_destination_last_year'][0] }},
+                            {{ data['top_destination_last_year'][1] }},
+                            {{ data['top_destination_last_year'][2] }}, </h4>
+                        <h4>Top Destination last three month:
+                            {{ data['top_destination_last_three_month'][0] }},
+                            {{ data['top_destination_last_three_month'][1] }},
+                            {{ data['top_destination_last_three_month'][2] }}, </h4>
+                    </div><br/><br/><br/><br/><br/><br/>
+                </div>
+                <div class="col-md-12">
+                <div class="section-heading" id = "flights">
+                    <h2>Top Booking Agents</h2>
+                </div>
+                <div>
+                    <h4>Top Five Booking Agents Last Month (Ticket Sold):
+                        {{ data['top_ba_ticket_last_month'][0] }},
+                        {{ data['top_ba_ticket_last_month'][1] }},
+                        {{ data['top_ba_ticket_last_month'][2] }},
+                    {{ data['top_ba_ticket_last_month'][3] }}
+                    {{ data['top_ba_ticket_last_month'][4] }}</h4>
+                    <h4>Top Five Booking Agents Last Year (Ticket Sold):
+                        {{ data['top_ba_ticket_last_year'][0] }},
+                        {{ data['top_ba_ticket_last_year'][1] }},
+                        {{ data['top_ba_ticket_last_year'][2] }},
+                    {{ data['top_ba_ticket_last_year'][3] }},
+                    {{ data['top_ba_ticket_last_year'][4] }}, </h4>
+                    <h4>Top Five Booking Agents Last Year (Commission):
+                        {{ data['top_ba_commission_last_year'][0] }},
+                        {{ data['top_ba_commission_last_year'][1] }},
+                        {{ data['top_ba_commission_last_year'][2] }},
+                    {{ data['top_ba_commission_last_year'][3] }},
+                    {{ data['top_ba_commission_last_year'][4] }}, </h4>
+                </div><br/><br/><br/><br/><br/><br/>
+                </div>
+                {% endif %}
+            </div>
+            
+            
+        </div>
+    </section>
+</body>
+<style>
+	* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Open Sans', arial, sans-serif;
+    }
+        body {
+            overflow-x: hidden;
+            background-color: #e7e7e7;
+        }
+
+        .topnav {
+        background-color: rgba(250, 250, 250, 0.3);
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        width: 90%;
+        }
+
+        .topnav a {
+        
+        color: rgba(250, 250, 250, 0.5);
+        text-align: center;
+        display: inline-block;
+        text-decoration: none;
+        font-size: 14px;
+        
+        }
+
+        .topnav a:hover {
+        background-color: #2ecc71;
+        color: white;
+        }
+
+        .topnav a.active {
+        background-color: #2ecc71;
+        color: white;
+        }
+
+        .section-heading h2 {
+            margin-top: 60px;
+            margin-bottom: 60px;
+            text-align: center;
+            font-size: 24px;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: #121212;
+        }
+
+        .banner {
+            background-color: rgba(250, 250, 250, 0.95);
+            text-align: center;
+        }
+
+        .banner .left-side {
+            text-align: left;
+            background-color: rgba(0, 0, 0, 0.5);
+            height: 100%;
+            margin-left: -100vh;
+            padding-left: 100vh;
+        }
+
+        .banner .page-direction-button {
+            margin-top: 80px;
+        }
+
+        .banner .tabs-content {
+            margin-top: 60px;
+        }
+
+        .banner .tabs-content h4 {
+            margin-top: 0px;
+            margin-bottom: 40px;
+            font-size: 24px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .banner .submit-form {
+            text-align: left;
+            margin: 85px 20px;
+            background-color: rgba(250, 250, 250, 0.95);
+            padding: 20px;
+            padding-bottom: 50px;
+        }
+
+        .submit-form h4 {
+            width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            display: inline-block;
+            border-bottom: 1px solid #dbdada;
+        }
+
+        .submit-form h4 em {
+            font-style: normal;
+        }
+
+        .submit-form label {
+            margin-top: 10px;
+            float: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #121212;
+        }
+
+        .submit-form select {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            width: 100%;
+            height: 36px;
+            border: none;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            outline: none;
+            padding: 0px 10px;
+            display: inline-block;
+        }
+
+        .submit-form .date {
+            margin-bottom: 10px;
+            width: 100%;
+            height: 36px;
+            border: none;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            outline: none;
+            padding-left: 15px;
+            display: inline-block;
+            box-shadow: none;
+            border-radius: 0px;
+        }
+        .submit-form input {
+            margin-left: 5px;
+            margin-bottom: 15px;
+            background: none;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            border: 2px solid #2ecc71;
+            padding: 14px 20px;
+            outline: none;
+            color: black;
+            border-radius: 24px;
+            transition: 0.25s;
+            cursor: pointer;
+        }
+        .submit-form input[type = "search"]{
+            margin-left: 5px;
+            width: 100%;
+            height: 36px;
+            background-color: #e7e7e7;
+            font-size: 11px;
+            color: #9a9a9a;
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+            border: none;
+            padding: 14px 20px;
+            outline: none;
+            color: black;
+            border-radius: 0px;
+        }
+
+        #recommended-flight {
+            margin-top: 100px;
+            background-color: #f4f4f4;
+            padding: 80px 0px;
+        }
+        #recommended-flight .tabs {
+        list-style: none;
+        margin-top: 0px;
+        padding-right: 0px;
+        }
+
+        .map {
+            background-color: #f4f4f4;
+            padding: 100px 0px;
+        }
+
+        @media (max-width: 991px) {
+            .banner .left-side {
+                text-align: center;
+                overflow: hidden;
+                padding-left: 0vh;
+                margin-left: -50vh;
+                margin-right: -50vh;
+                padding-right: 50vh;
+                padding-left: 50vh;
+            }
+            .banner .tabs-content {
+                margin-top: 60px;
+            }
+            .banner .submit-form {
+                margin: 30px 30px;
+            }	
+        }
+		.box{
+			margin-top: 30px;
+            width: 300px;
+			padding: 30px;
+			position: absolute;
+			top: 100%;
+			left: 50%;
+			transform: translate(-50%,0);
+			background-color: rgba(250, 250, 250, 0.95);
+			text-align: center;
+			}
+		.box h1{
+			color: black;
+			text-transform: uppercase;
+			font-weight: 500;
+			margin: 40px auto;
+		}
+		.box h2{
+			width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 0px;
+            margin-bottom: 10px;
+            padding-bottom: 20px;
+            display: inline-block;
+            border-bottom: 1px solid #dbdada;
+		}
+        a{
+			background: none;
+			color: black;
+			font-size: 70%;
+			width: 180px;
+			height: 50px;
+			border:0;
+			display: block;
+			margin: 20px auto;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+			text-align: center;
+			border: 2px solid #2ecc71;
+			padding: 14px 10px;
+			outline: none;
+			border-radius: 24px;
+			transition: 0.25s;
+			cursor: pointer;
+			}
+		a:hover{
+			background-color: #2ecc71;
+			}
+        .order_btn{
+			width: 80px;
+			padding: 10px;
+            margin-bottom: 20px;
+            margin-left: 10px;
+            font-size: 70%; 
+			position: absolute;
+			border: 2px solid #2ecc71;
+            border-radius: 24px;
+			background-color: rgba(250, 250, 250, 0.95);
+			text-align: center;
+            transition: 0.25s;
+			cursor: pointer;
+			}
+        .order_btn:hover{
+			background-color: #2ecc71;
+			}
+        
+        .content-table {
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 0.8em;
+            min-width: 1200px;
+            max-height: 580px;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            }
+
+        .content-table thead tr {
+            background-color: #009879;
+            color: #ffffff;
+            text-align: left;
+            font-weight: bold;
+            }
+
+        .content-table th,
+        .content-table td {
+            padding: 12px 15px;
+            text-align: center;
+            }
+
+        .content-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+            }
+
+        .content-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+            }
+
+        .content-table tbody tr:last-of-type {
+            border-bottom: 2px solid #009879;
+            }
+
+        .content-table tbody tr.active-row {
+            font-weight: bold;
+            color: #009879;
+            }
+        #recommend-flight-info input {
+            width: 65px;
+            height: 32px;
+            font-size: 0.8em;
+            border: 2px solid #2ecc71;
+            border-radius: 24px;
+            transition: 0.25s;
+			cursor: pointer;
+			background-color: #f3f3f3;
+			text-align: center;
+        }
+        #recommend-flight-info input:hover{
+            background-color: #2ecc71;
+        }
+	</style>
+<link rel="stylesheet" type= "text/css" href="{{ url_for('static',filename='css/bootstrap.css') }}">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">

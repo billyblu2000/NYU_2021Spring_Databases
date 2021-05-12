@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Insert Airport</title>
+    <style>
+			body{
+				margin: 0;
+				padding: 0;
+				font-family: sans-serif;
+				background: #fff;
+			}
+			.box{
+				width: 300px;
+				padding: 40px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%,-50%);
+				background: #e7e7e7;
+				text-align: center;
+			}
+			.box h1{
+				color: black;
+				text-transform: uppercase;
+				font-weight: 500;
+				margin: 20px auto;
+			}
+			.box input[type = "text"],.box input[type = "password"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 200px;
+				outline: none;
+				color: black;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "name"]{
+				border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 80px;
+				outline: none;
+				color: black;
+				border-radius: 24px;
+				transition: 0.25s;
+			}
+			.box input[type = "text"]:focus,.box input[type = "password"]:focus{
+				width: 280px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "name"]:focus{
+				width: 120px;
+				border-color: #2ecc71;
+			}
+			.box input[type = "submit"]{
+				border:0;
+				background: none;
+				display: block;
+				margin: 20px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 40px;
+				outline: none;
+				color: black;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			.box input[type = "submit"]:hover{
+				background: #2ecc71;
+			}
+
+			.box input[type = "button"]{
+				color: black;
+				font-size: 80%;
+				background: none;
+				display: inline-flex;
+				height: 50px;
+				width: 70px;
+				margin: 10px auto;
+				margin-right: 10px;
+				align-items: center;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				justify-content: center;
+				padding: 14px 40px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: .3s linear;
+				cursor: pointer;
+			}
+			.box input[type = "button"]:hover{
+				background: #2ecc71;
+			}
+			.box input[type = "button"]:focus{
+				background: #2ecc71;
+			}
+
+			a{
+				background: none;
+				color: black;
+				font-size: 80%;
+				text-decoration: initial;
+				width: 80px;
+				height: 15px;
+				border:0;
+				display: block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #2ecc71;
+				padding: 14px 20px;
+				outline: none;
+				border-radius: 24px;
+				transition: 0.25s;
+				cursor: pointer;
+			}
+			a:hover{
+				background-color: #2ecc71;
+			}
+            select{
+                border:0;
+				background: none;
+				display: inline-block;
+				margin: 10px auto;
+				text-align: center;
+				border: 2px solid #3498db;
+				padding: 14px 10px;
+				width: 220px;
+				outline: none;
+				color: white;
+				border-radius: 24px;
+				transition: 0.25s;
+                text-align-last: center;
+            }
+            select:focus{
+				border-color: #2ecc71;
+			}
+            option{
+                text-align:center;
+            }
+            .select_gray{
+                color: gray;
+            }
+            .select_white{
+                color: black;
+            }
+            .error{
+                color: #c7254e;
+            }
+
+			</style>
+</head>
+<body>
+
+<form action="/home/insert/flight/" class="box" method="get">
+    <h1>Insert Flight</h1>
+    <input type="text" name="flight_num" placeholder="Flight Number" required>
+    <label>
+            <select id="select_departure_airport" name="departure_airport" class="select_gray" required>
+                <option disabled selected hidden value="departure_airport">Departure Airport</option>
+                {% for i in data['airport'] %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select>
+    </label>
+    <input type="text" name="departure_time" placeholder="Departure Time (yyyy-mm-dd hh:mm)" required>
+    <label>
+            <select id="select_arrival_airport" name="arrival_airport" class="select_gray" required>
+                <option disabled selected hidden value="arrival_airport">Arrival Airport</option>
+                {% for i in data['airport'] %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select>
+    </label>
+    <input type="text" name="arrival_time" placeholder="Arrival Time (yyyy-mm-dd hh:mm)" required>
+    <input type="text" name="price" placeholder="Price" required>
+    <label>
+            <select id="select_status" name="status" class="select_gray" required>
+                <option  selected value="upcoming">Upcoming</option>
+                <option value="delayed">Delayed</option>
+                <option value="canceled">Canceled</option>
+            </select>
+    </label>
+    <label>
+            <select id="select_airplane" name="airplane_id" class="select_gray" required>
+                <option disabled selected hidden value="airplane">Airplane ID</option>
+                {% for i in data['airplane'] %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select>
+    </label>
+    <br/><br/>
+    <input type="checkbox" checked id="ticket" name="ticket" value="ticket" >
+    <label style="color: gray" for="ticket">Automatic create ticket (amount same with seats)</label><br>
+    <input type="submit" name="" value = "Insert"/>
+    <p class="error">
+    {{ data['msg'] }}
+    <p>
+    <a href="/home/">Back Home</a>
+</form>
+
+</body>
+<script>
+var targetoSelect1 = document.getElementById("select_departure_airport");
+targetoSelect1.onchange = function(ev) {
+    var target = ev.target;
+    target.classList.remove("select_gray");
+    target.classList.add("select_white");
+}
+var targetoSelect2 = document.getElementById("select_arrival_airport");
+targetoSelect2.onchange = function(ev) {
+    var target = ev.target;
+    target.classList.remove("select_gray");
+    target.classList.add("select_white");
+}
+var targetoSelect3 = document.getElementById("select_airplane");
+targetoSelect3.onchange = function(ev) {
+    var target = ev.target;
+    target.classList.remove("select_gray");
+    target.classList.add("select_white");
+}
+var targetoSelect4 = document.getElementById("select_status");
+targetoSelect4.onchange = function(ev) {
+    var target = ev.target;
+    target.classList.remove("select_gray");
+    target.classList.add("select_white");
+}
+</script>
+</html>

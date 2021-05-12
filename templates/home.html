@@ -31,17 +31,15 @@
                                 <h2>Welcome, {{data['user']}}</h2>
                                     <a href="#flights">Flights</a>
                                     <a href="/profile/">Profile</a>
-                                    <a href="#commission">Commission</a>
-                                    <a href="#top_customer">Top Customers</a>
+                                    <a href="/profile/#commission">Commission</a>
+                                    <a href="/profile/#top_customer">Top Customers</a>
                                     <a href="/logout/">Log Out</a>
                             {% elif data['role'] == 'Staff' %}
                                 <h2>Welcome, {{data['user']}}</h2>
                                     <a href="/profile/">Profile</a>
-                                    <a href="#add">Add</a>
-                                    <a href="#frequent_customer">Frequent Customers</a>
-                                    <a href="#report">Report</a>
-                                    <a href="#earned">Revenue earned</a>
-                                    <a href="#top_destination">Top Destination</a>
+                                    <a href="/home/insert/airport/">Insert Airport</a>
+                                    <a href="/home/insert/airplane/">Insert Airplane</a>
+                                    <a href="/home/insert/flight/">Insert Flight</a>
                                     <a href="/logout/">Log Out</a>
                             {% endif %}
                         </form>
@@ -59,7 +57,7 @@
                                         <select name='departure_city' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
                                             {% for i in data['departure_cities'] %}                                                
-                                                <option value={{ i }}>{{ i }}</option>
+                                                <option value="{{ i }}">{{ i }}</option>
                                             {% endfor %} 
                                         </select>
                                     </fieldset>
@@ -70,7 +68,7 @@
                                         <select name='arrival_city' onchange='this.form.()'>
                                             <option value="">Select a location...</option>
                                             {% for i in data['arrival_cities'] %}                                                
-                                                <option value={{ i }}>{{ i }}</option>
+                                                <option value="{{ i }}">{{ i }}</option>
                                             {% endfor %} 
                                         </select>
                                     </fieldset>
@@ -93,7 +91,7 @@
                                         <select name='airline_name' onchange='this.form.()'>
                                             <option value="">Select a airline</option>
                                             {% for i in data['airlines'] %}                                                
-                                                <option value={{ i }}>{{ i }}</option>
+                                                <option value="{{ i }}">{{ i }}</option>
                                             {% endfor %}   
                                         </select>
                                     </fieldset>
@@ -124,15 +122,18 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="section-heading" id = "flights">
-                        {% if data['role'] != 'Staff' %}  
-                        <h2>Recommended Flights For You</h2>
+
+                        {% if (data['searched'] == 0) and (data['role'] != 'Staff') %}
+                            <h2>Recommended Flights</h2>
+                        {%  elif data['searched'] == 1 %}
+                            <h2>Founded Flights</h2>
                         {% else %}
-                        <h2>Frequent Customers</h2>
+                        <h2>My Airline Flights</h2>
                         {% endif %}
                     </div>
                 </div>
                 <div class="col-md-12">
-                {% if data['role'] != 'Staff' %}
+                
                 <table class="content-table">
                     <thead>
                         <tr>
@@ -149,7 +150,7 @@
                         <th>Airplane Id</th>
                         {% if data['role'] == 'Staff' %}
                         <th>Edit</th>
-                        <th>Add</th>
+                        
                         {% else %}
                         <th>Purchase</th>
                         {% endif %}
@@ -158,7 +159,7 @@
                     <tbody  id="recommend-flight-info">                    
                     </tbody>
                 </table>
-                {% endif %}
+                
                 <script>
                 var myArray = {{ data['flights']|safe }};
                 var table = document.getElementById('recommend-flight-info');
@@ -176,10 +177,11 @@
                                     <td>${myArray[i].price}</td>
                                     <td>${myArray[i].status}</td>
                                     <td>${myArray[i].airplane_id}</td>
-                                    <td><input id="purchase_btn" type="submit" value = "Purchase" onclick="purchase_s_or_f()" href="/purchase/?airline_name=${myArray[i].airline_name}&flight_num=${myArray[i].flight_num}" ></button></td>
-                                    {% if data['role'] == 'Staff' %}
+                                    {% if data['role'] != 'Staff' %}
+                                    <td><a href="/purchase/?airline_name=${myArray[i].airline_name}&flight_num=${myArray[i].flight_num}">Purchase</a></td>
+                                    {% elif data['role'] == 'Staff' %}
                                     <td><input id="edit_btn" type="submit" value = "Edit" onclick="edit(`+i+`)"></button></td>
-                                    <td><input id="Add_btn" type="submit" value = "Add" onclick="add()"></button></td>
+                                    
                                     {% endif %}
                                 </tr>`
                         table.innerHTML += row
@@ -190,9 +192,12 @@
                 function edit(i) {
                     table.innerHTML = "";
                     create_table(myArray.slice(0, i));
+                    //var st = document.getElementById("status");
+                    //console.log(st);
+                   
                     var new_row = `<tr>
-                                    <td contenteditable='true'>${myArray[i].airline_name}</td>
-                                    <td contenteditable='true'>${myArray[i].flight_num}</td>
+                                    <td>${myArray[i].airline_name}</td>
+                                    <td>${myArray[i].flight_num}</td>
                                     <td contenteditable='true'>${myArray[i].departure_airport}</td>
                                     <td contenteditable='true'>${myArray[i].departure_date}</td>
                                     <td contenteditable='true'>${myArray[i].departure_time}</td>
@@ -200,19 +205,19 @@
                                     <td contenteditable='true'>${myArray[i].arrival_date}</td>
                                     <td contenteditable='true'>${myArray[i].arrival_time}</td>
                                     <td contenteditable='true'>${myArray[i].price}</td>
-                                    <td><select name='from' onchange='this.form.()'>
-                                        <option value="${myArray[i].status}">${myArray[i].status}</option>
-                                        <option value="upcoming">upcoming</option>
+                                    <td><select id="status_update" name='from' onchange='this.form.()'>
+                                        <option selected value="upcoming">upcoming</option>
                                         <option value="delayed">delayed</option>
-                                        <option value="cancel">cancel</option>
+                                        <option value="canceled">canceled</option>
                                     <td contenteditable='true'>${myArray[i].airplane_id}</td>
-                                    <td><input id="save_btn" type="submit" value = "Save" onclick="save(`+i+`)"></button></td>
-                                    <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
+                                    <td><input onclick="save(${myArray[i].flight_num})" id="save_btn" type="submit" value = "Save" ></button></td>
                             </tr>`
+                    
+                    //document.getElementById("result").innerHTML = result;
                     table.innerHTML += new_row;
                     create_table(myArray.slice(i+1));
                 }
-                function add(indice) {
+                /*function add(indice) {
                     var new_row = `<tr>
                                     <td>
                                         <select name='airline_name' onchange='this.form.()'>
@@ -258,10 +263,14 @@
                                     <td><input id="cancel_btn" type="submit" value = "Cancel" onclick="cancel(`+i+`)"></button></td>
                             </tr>`
                     table.innerHTML += new_row;
-                }
-                function save(indice) {
+                }*/
+                function save(fn) {
+                    var e = document.getElementById("status_update");
+                    var result = e.options[e.selectedIndex].value;
+                    console.log(result);
+                    location.href = `/home/update/?flight_num=${fn}&status=${result}`;
                     table.innerHTML = "";
-                    create_table(myArray);
+                    create_table({{ data['flights']|safe }});
                 }
                 function cancel(i) {
                     table.innerHTML = "";
@@ -290,6 +299,7 @@
                 function purchase_s_or_f(msg){
                     var window = document.getElementById("purchase_status");
                     window.style.display = "block";
+
                 }
                 
                 </script>
@@ -300,9 +310,7 @@
     <div id="purchase_status" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        {% if data['msg'] == 'success' %}
-            <p>Purchase Complete!</p>
-        {% else %}
+        {% if data['msg'] != 'ok' %}
             <p>Purchase Fail!</p>
         {% endif %}
     </div>
@@ -350,7 +358,7 @@
 
         .section-heading h2 {
             margin-top: 0px;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
             text-align: center;
             font-size: 24px;
             text-transform: uppercase;
@@ -361,7 +369,7 @@
         .banner {
             background-image: url(../static/img/banner-bg.jpg);
             background-repeat: no-repeat;
-            background-size: 1800px 1000px;
+            background-size: 1800px 1200px;
             background-position: center center;
             text-align: center;
         }
@@ -375,7 +383,7 @@
         }
 
         .banner .page-direction-button {
-            margin-top: 80px;
+            margin-top: 20px;
         }
 
         .banner .tabs-content {
@@ -392,10 +400,13 @@
 
         .banner .submit-form {
             text-align: left;
-            margin: 85px 20px;
+            margin-top: 100px;
+            margin-bottom: 150px;
+            
             background-color: rgba(250, 250, 250, 0.95);
             padding: 20px;
-            padding-bottom: 50px;
+            padding-bottom: 60px;
+            
         }
 
         .submit-form h4 {
@@ -482,9 +493,9 @@
         }
 
         #recommended-flight {
-            margin-top: 100px;
             background-color: #f4f4f4;
             padding: 80px 0px;
+            min-height: 800px;
         }
         #recommended-flight .tabs {
         list-style: none;
@@ -545,8 +556,8 @@
 			background: none;
 			color: black;
 			font-size: 70%;
-			width: 180px;
-			height: 50px;
+			width: 80%;
+			height: 50%;
 			border:0;
 			display: block;
 			margin: 20px auto;
@@ -603,6 +614,13 @@
             padding: 12px 15px;
             text-align: center;
             }
+        .content-table a{
+            width: 80px;
+            height: 30px;
+            margin: 0px auto;
+            text-align: center;
+            padding: 5px;
+        }
 
         .content-table tbody tr {
             border-bottom: 1px solid #dddddd;
