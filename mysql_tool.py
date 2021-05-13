@@ -141,6 +141,7 @@ class MySQLTool:
                 return ''
             seats = self.root_sql_query(user='root', stmt='SELECT seats FROM airplane where airplane_id=%s',
                                         value=[airplane_id])[0][0]
+            # only for test!
             seats //= 10
         else:
             seats = ticket_number

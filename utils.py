@@ -199,7 +199,7 @@ def retrieve_get_args_for_staff_date_report(request):
     return start, end
 
 
-def staff_functions(mysqltool, mysqltool_user, request, action):
+def staff_functions(mysqltool, mysqltool_user, request, action, user=None):
     if action == 'all_booking_agents':
         result = mysqltool.staff_query(user=mysqltool_user,
                                        table='flight NATURAL JOIN ticket NATURAL JOIN purchases NATURAL JOIN '
@@ -315,18 +315,22 @@ def staff_functions(mysqltool, mysqltool_user, request, action):
     elif action == 'revenue':
         last_month = str(datetime.date.today() - datetime.timedelta(days=90))
         last_year = str(datetime.date.today() - datetime.timedelta(days=365))
+        airline_name = mysqltool.root_get_staff_airline(user='root', staff=user)
         stmt = 'WITH count_null_month AS (SELECT SUM(price) AS cnm FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
-               'WHERE booking_agent_id IS NULL AND purchase_date > %s), ' \
+               'WHERE booking_agent_id IS NULL AND purchase_date > %s AND airline_name = %s), ' \
                'count_null_year AS (SELECT SUM(price) AS cny FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
-               'WHERE booking_agent_id IS NULL AND purchase_date > %s), ' \
+               'WHERE booking_agent_id IS NULL AND purchase_date > %s AND airline_name = %s), ' \
                'count_not_null_month AS (SELECT SUM(price) AS cnnm FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
-               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s), ' \
+               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s AND airline_name = %s), ' \
                'count_not_null_year AS (SELECT SUM(price) AS cnny FROM flight NATURAL JOIN ticket NATURAL JOIN purchases ' \
-               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s) ' \
+               'WHERE booking_agent_id IS NOT NULL AND purchase_date > %s AND airline_name = %s) ' \
                'SELECT cnm, cny, cnnm, cnny ' \
                'FROM count_null_month, count_null_year, count_not_null_month, count_not_null_year'
         result = mysqltool.staff_query(user=mysqltool_user, table=None,
-                                       usestmt=True, s=stmt, v=[last_month, last_year, last_month, last_year])
+                                       usestmt=True, s=stmt, v=[last_month, airline_name,
+                                                                last_year, airline_name,
+                                                                last_month, airline_name,
+                                                                last_year, airline_name])
         result = list(result[0])
         return result
     elif action == 'destinations':

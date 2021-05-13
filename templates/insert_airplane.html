@@ -187,6 +187,12 @@
     {{ data['msg'] }}
     <p>
     <a href="/home/">Back Home</a>
+    {% if error %}
+    <div class="error">
+    <p>{{ error }}</p>
+    {% endif %}
+</div>
+
 </form>
 
 

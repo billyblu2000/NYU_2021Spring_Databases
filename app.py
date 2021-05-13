@@ -493,15 +493,18 @@ def staff_insert_airport():
 def staff_insert_airplane():
     if session['user'][-1] != 'A':
         return back_home()
+    result = mt.root_sql_query(user='root', stmt=mt.STMT_GET_ALL_AIRPLANES_GIVEN_STAFF,
+                               value=[session['user'][:-2]])
+    data = {'airplane': result}
     if request.method == 'GET' and not request.args.get('airplane_id'):
-        result = mt.root_sql_query(user='root', stmt=mt.STMT_GET_ALL_AIRPLANES_GIVEN_STAFF,
-                                   value=[session['user'][:-2]])
-        data = {'airplane': result}
         return render_template('insert_airplane.html', data=data)
     else:
         airline_name = mt.root_get_staff_airline(user='root', staff=session['user'][:-2])
-        airplane_id = int(request.args.get('airplane_id'))
-        seats = int(request.args.get('seats'))
+        try:
+            airplane_id = int(request.args.get('airplane_id'))
+            seats = int(request.args.get('seats'))
+        except:
+            return render_template('insert_airplane.html', data=data, error = 'Please input a valid number!')
         if mt.staff_insert(user=session['user'], table='airplane', create_ticket=False,
                            value=[airline_name, airplane_id, seats]):
             result = mt.root_sql_query(user='root', stmt=mt.STMT_GET_ALL_AIRPLANES_GIVEN_STAFF,
@@ -700,7 +703,7 @@ def profile_staff(user):
     frequent_customer, customer_flight = utils.staff_functions(mt, user, request, action='frequent_customers')
     customer_flight = utils.flight_list_to_json_list(customer_flight)
     total_ticket, month_wise_ticket = utils.staff_functions(mt, user, request, action='report')
-    result = utils.staff_functions(mt, user, request, action='revenue')
+    result = utils.staff_functions(mt, user, request, action='revenue', user=session['user'][:-2])
     result = [result[i] if result[i] is not None else 0 for i in range(len(result))]
     revenue_direct_last_month, revenue_direct_last_year, \
     revenue_indirect_last_month, revenue_indirect_last_year = \

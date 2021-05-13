@@ -86,7 +86,8 @@
                     <input type="month" name="start_month" id="sm">
                     <label for="sm">End: </label>
                     <input type="month" name="end_month" id="em">
-                    <input class="order_btn" type="submit" value="submit">
+                    <input class="order_btn" type="submit" value = "Submit" ></button>
+                    </form>
                 </form>
                     <h3>Total Spending: {{ data['total'] }}</h3>
 
@@ -123,7 +124,7 @@
                     <input type="date" name="start" id="sd">
                     <label for="sd">End: </label>
                     <input type="date" name="end" id="ed">
-                    <input class="order_btn" type="submit" value="submit">
+                    <input class="order_btn" type="submit" value = "Submit" ></button>
                 </form>
                     <h4>Here is the commission result:</h4>
                   <h4>Total Commission: {{ data['total_commission'] }}</h4>
@@ -187,7 +188,7 @@
                         <form action="/profile/" method="get">
                             <h3>You can specify a customer by giving the email</h3>
                             <input type="search" id="search id" name="customer_email" placeholder="Customer Email">
-                            <input class="order_btn" type="submit" value="Submit">
+                            <input class="order_btn" type="submit" value = "Submit" ></button>
                         </form>
                         {% if data['customer_email'] == None %}
                             <h3>Now showing the flights of customer "{{ data['frequent_customer'].email }}"</h3>
@@ -268,7 +269,6 @@
                             data: [{
                                 type: "pie",
                                 startAngle: 240,
-                                yValueFormatString: "##0.00\"%\"",
                                 indexLabel: "{label} {y}",
                                 dataPoints: [
                                     {y: parseInt({{ data['revenue_direct_last_year'] }}), label: "Direct (Customer)"},
@@ -303,39 +303,39 @@
                         <h2>Top Destinations</h2>
                     </div>
                     <div>
-                        <h4>Top Destination last year:
-                            {{ data['top_destination_last_year'][0] }},
-                            {{ data['top_destination_last_year'][1] }},
-                            {{ data['top_destination_last_year'][2] }}, </h4>
-                        <h4>Top Destination last three month:
-                            {{ data['top_destination_last_three_month'][0] }},
-                            {{ data['top_destination_last_three_month'][1] }},
-                            {{ data['top_destination_last_three_month'][2] }}, </h4>
-                    </div><br/><br/><br/><br/><br/><br/>
+                        <h4>Top Destination last year:</h4>
+                            <h>{{ data['top_destination_last_year'][0] }}</h><br>
+                            <h>{{ data['top_destination_last_year'][1] }}</h><br>
+                            <h>{{ data['top_destination_last_year'][2] }}</h><br>
+                        <h4>Top Destination last three month:</h4>
+                            <h>{{ data['top_destination_last_three_month'][0] }}</h><br>
+                            <h>{{ data['top_destination_last_three_month'][1] }}</h><br>
+                            <h>{{ data['top_destination_last_three_month'][2] }}</h><br>
+                    </div><br/><br/>
                 </div>
                 <div class="col-md-12">
                 <div class="section-heading" id = "flights">
                     <h2>Top Booking Agents</h2>
                 </div>
                 <div>
-                    <h4>Top Five Booking Agents Last Month (Ticket Sold):
-                        {{ data['top_ba_ticket_last_month'][0] }},
-                        {{ data['top_ba_ticket_last_month'][1] }},
-                        {{ data['top_ba_ticket_last_month'][2] }},
-                    {{ data['top_ba_ticket_last_month'][3] }}
-                    {{ data['top_ba_ticket_last_month'][4] }}</h4>
-                    <h4>Top Five Booking Agents Last Year (Ticket Sold):
-                        {{ data['top_ba_ticket_last_year'][0] }},
-                        {{ data['top_ba_ticket_last_year'][1] }},
-                        {{ data['top_ba_ticket_last_year'][2] }},
-                    {{ data['top_ba_ticket_last_year'][3] }},
-                    {{ data['top_ba_ticket_last_year'][4] }}, </h4>
-                    <h4>Top Five Booking Agents Last Year (Commission):
-                        {{ data['top_ba_commission_last_year'][0] }},
-                        {{ data['top_ba_commission_last_year'][1] }},
-                        {{ data['top_ba_commission_last_year'][2] }},
-                    {{ data['top_ba_commission_last_year'][3] }},
-                    {{ data['top_ba_commission_last_year'][4] }}, </h4>
+                    <h4>Top Five Booking Agents Last Month (Ticket Sold):</h4>
+                        <h>{{ data['top_ba_ticket_last_month'][0] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_month'][1] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_month'][2] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_month'][3] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_month'][4] }}</h><br>
+                    <h4>Top Five Booking Agents Last Year (Ticket Sold):</h4>
+                        <h>{{ data['top_ba_ticket_last_year'][0] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_year'][1] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_year'][2] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_year'][3] }}</h><br>
+                        <h>{{ data['top_ba_ticket_last_year'][4] }}</h><br>
+                    <h4>Top Five Booking Agents Last Year (Commission):</h4>
+                        <h>{{ data['top_ba_commission_last_year'][0] }}</h><br>
+                        <h>{{ data['top_ba_commission_last_year'][1] }}</h><br>
+                        <h>{{ data['top_ba_commission_last_year'][2] }}</h><br>
+                        <h>{{ data['top_ba_commission_last_year'][3] }}</h><br>
+                        <h>{{ data['top_ba_commission_last_year'][4] }}</h><br>
                 </div><br/><br/><br/><br/><br/><br/>
                 </div>
                 {% endif %}
